@@ -4,8 +4,12 @@ import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:event/event.dart';
+import 'package:flow/bindings.dart';
 
 class AppState {
+  /// Gives access to the C layer.
+  static Bindings bindings = Bindings();
+
   Image? image;
   int imageHeight = 1;
   int imageWidth = 1;

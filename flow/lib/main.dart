@@ -1,6 +1,8 @@
+import 'package:flow/app_state.dart';
 import 'package:flow/space.dart';
 import 'package:flutter/material.dart';
-import 'package:c_layer/c_layer.dart' as c_layer;
+
+import 'dart:developer' as dev;
 
 void main() {
   runApp(const MyApp());
@@ -32,12 +34,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  @override
+  void initState() {
+    super.initState();
 
-  int stuff(int input) {
-    int result = c_layer.sum(_counter, input);
-    _counter = result;
-    return result;
+    dev.log('diff 4 - 1 = ${AppState.bindings.cLayerBindings.diff(4, 1)}');
   }
 
   @override

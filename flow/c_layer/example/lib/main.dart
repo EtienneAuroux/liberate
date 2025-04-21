@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-import 'package:c_layer/c_layer.dart' as c_layer;
-
 void main() {
   runApp(const MyApp());
 }
@@ -21,8 +19,8 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    sumResult = c_layer.sum(1, 2);
-    sumAsyncResult = c_layer.sumAsync(3, 4);
+    sumResult = 3;
+    sumAsyncResult = Future.value(7);
   }
 
   @override
@@ -55,8 +53,7 @@ class _MyAppState extends State<MyApp> {
                 FutureBuilder<int>(
                   future: sumAsyncResult,
                   builder: (BuildContext context, AsyncSnapshot<int> value) {
-                    final displayValue =
-                        (value.hasData) ? value.data : 'loading';
+                    final displayValue = (value.hasData) ? value.data : 'loading';
                     return Text(
                       'await sumAsync(3, 4) = $displayValue',
                       style: textStyle,

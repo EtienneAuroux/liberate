@@ -46,6 +46,20 @@ class CLayerBindings {
       _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>('sum');
   late final _sum = _sumPtr.asFunction<int Function(int, int)>();
 
+  int diff(
+    int a,
+    int b,
+  ) {
+    return _diff(
+      a,
+      b,
+    );
+  }
+
+  late final _diffPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>('diff');
+  late final _diff = _diffPtr.asFunction<int Function(int, int)>();
+
   /// A longer lived native function, which occupies the thread calling it.
   ///
   /// Do not call these kind of native functions in the main isolate. They will
