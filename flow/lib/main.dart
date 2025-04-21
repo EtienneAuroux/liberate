@@ -1,5 +1,6 @@
-import 'package:flow/app_state.dart';
+import 'package:flow/bindings.dart';
 import 'package:flow/space.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'dart:developer' as dev;
@@ -37,12 +38,25 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-
-    dev.log('diff 4 - 1 = ${AppState.bindings.cLayerBindings.diff(4, 1)}');
   }
 
   @override
   Widget build(BuildContext context) {
-    return const SpaceWidget();
+    return Listener(
+      // onTap: () {
+      //   dev.log('tap');
+      //   cLayerBindings.test();
+      // },
+      onPointerDown: (event) {
+        if (event.buttons == kPrimaryMouseButton) {
+          dev.log('tap primary');
+          cLayerBindings.test();
+        } else {
+          dev.log('tap');
+        }
+      },
+      behavior: HitTestBehavior.opaque,
+      child: const SpaceWidget(),
+    );
   }
 }

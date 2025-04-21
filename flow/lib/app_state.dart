@@ -6,19 +6,22 @@ import 'dart:ui';
 import 'package:event/event.dart';
 import 'package:flow/bindings.dart';
 
-class AppState {
-  /// Gives access to the C layer.
-  static Bindings bindings = Bindings();
+import 'dart:developer' as dev;
 
+class AppState {
   Image? image;
   int imageHeight = 1;
   int imageWidth = 1;
 
   Event onNewImage = Event();
 
-  void _onNewFrame(int viewId, int width, int height, Pointer<Void> data, int dataSize) {
-    // libipr.ipr_profile_view_metrics metrics
-    FrameEvent frameEvent = FrameEvent(viewId, width, height, data, dataSize, Metrics());
+  void initialize() {
+    cLayerBindings.initialize(Pointer.fromFunction<FuncPtrNewFrame>(_onNewFrame));
+  }
+
+  void _onNewFrame(int width, int height, int dataSize, Pointer<Void> data) {
+    dev.log('received new frame from c layer: $width, $height, $dataSize');
+    FrameEvent frameEvent = FrameEvent(width, height, data, dataSize);
     handleNewFrame(frameEvent);
   }
 
@@ -39,14 +42,12 @@ class AppState {
 }
 
 class FrameEvent extends EventArgs {
-  final int id;
   final int width;
   final int height;
   final int dataSize;
   final Pointer<Void> data;
-  final Metrics metrics;
 
-  FrameEvent(this.id, this.width, this.height, this.data, this.dataSize, this.metrics);
+  FrameEvent(this.width, this.height, this.data, this.dataSize);
 }
 
 class Metrics {}
