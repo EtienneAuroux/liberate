@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "chrono": "c",
+        "variant": "c",
+        "algorithm": "c",
+        "limits": "c",
+        "utility": "c",
+        "xutility": "c"
+    }
+}

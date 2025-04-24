@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:flow/app_state.dart';
 import 'package:flow/bindings.dart';
 import 'package:flow/space.dart';
 import 'package:flutter/gestures.dart';
@@ -35,9 +38,13 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  Random random = Random();
+
   @override
   void initState() {
     super.initState();
+
+    AppState.initialize();
   }
 
   @override
@@ -49,11 +56,10 @@ class _MyHomePageState extends State<MyHomePage> {
       // },
       onPointerDown: (event) {
         if (event.buttons == kPrimaryMouseButton) {
-          dev.log('tap primary');
-          cLayerBindings.test();
-        } else {
-          dev.log('tap');
-        }
+          int seed = random.nextInt(5);
+          dev.log('seed: $seed');
+          cLayerBindings.randomScreen(seed);
+        } else {}
       },
       behavior: HitTestBehavior.opaque,
       child: const SpaceWidget(),

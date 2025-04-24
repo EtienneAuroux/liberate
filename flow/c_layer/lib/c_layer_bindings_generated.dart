@@ -27,20 +27,6 @@ class CLayerBindings {
           lookup)
       : _lookup = lookup;
 
-  int diff(
-    int a,
-    int b,
-  ) {
-    return _diff(
-      a,
-      b,
-    );
-  }
-
-  late final _diffPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>('diff');
-  late final _diff = _diffPtr.asFunction<int Function(int, int)>();
-
   void initialize(
     frame_callback frame_callback,
   ) {
@@ -55,18 +41,21 @@ class CLayerBindings {
   late final _initialize =
       _initializePtr.asFunction<void Function(frame_callback)>();
 
-  void test() {
-    return _test();
+  void randomScreen(
+    int seed,
+  ) {
+    return _randomScreen(
+      seed,
+    );
   }
 
-  late final _testPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function()>>('test');
-  late final _test = _testPtr.asFunction<void Function()>();
+  late final _randomScreenPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
+          'randomScreen');
+  late final _randomScreen = _randomScreenPtr.asFunction<void Function(int)>();
 }
 
-final class context extends ffi.Struct {
-  external frame_callback frame_callback1;
-}
+final class context extends ffi.Opaque {}
 
 typedef frame_callback
     = ffi.Pointer<ffi.NativeFunction<frame_callbackFunction>>;

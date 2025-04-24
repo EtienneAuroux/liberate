@@ -24,11 +24,11 @@ typedef void(*frame_callback)(uint64_t width, uint64_t height, uint64_t data_siz
 struct context
 {
     frame_callback frame_callback;
+    uint64_t size;
+    uint64_t image_bytes[];
 };
-
-FLOW_API int diff(int a, int b);
 
 FLOW_API void initialize(frame_callback frame_callback);
 
-FLOW_API void test();
+FLOW_API void randomScreen(uint64_t seed);
 
