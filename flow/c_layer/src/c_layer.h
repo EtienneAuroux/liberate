@@ -17,6 +17,8 @@
 #define FLOW_API
 #endif
 
+#define message(format, ...) log_message(log_level, __func__, __FILE__, __LINE__, format,  __VA_ARGS__);
+
 typedef void(*frame_callback)(uint64_t width, uint64_t height, uint64_t data_size, void *data);
 
 struct context

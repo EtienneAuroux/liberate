@@ -3,16 +3,6 @@ import 'dart:io';
 
 import 'package:c_layer/c_layer_bindings_generated.dart';
 
-// class Bindings {
-
-//   late final DynamicLibrary _dynamicLibrary;
-
-//   late CLayerBindings cLayerBindings;
-
-//   Bindings() {
-
-// }
-
 const String _libName = 'c_layer';
 
 final DynamicLibrary _dynamicLibrary = () {

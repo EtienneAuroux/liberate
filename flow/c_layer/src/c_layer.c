@@ -13,6 +13,7 @@ FLOW_API void initialize(frame_callback frame_callback)
 }
 
 FLOW_API void test() {
+  printf("came to test()");
   context.frame_callback(500, 500, 2500, NULL);
 }
 
