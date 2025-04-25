@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:event/event.dart';
 import 'package:flow/app_state.dart';
 import 'package:flow/bindings.dart';
 import 'package:flow/space.dart';
@@ -50,10 +51,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Listener(
-      // onTap: () {
-      //   dev.log('tap');
-      //   cLayerBindings.test();
-      // },
       onPointerDown: (event) {
         if (event.buttons == kPrimaryMouseButton) {
           int seed = random.nextInt(5);
@@ -62,7 +59,7 @@ class _MyHomePageState extends State<MyHomePage> {
         } else {}
       },
       behavior: HitTestBehavior.opaque,
-      child: const SpaceWidget(),
+      child: Space(),
     );
   }
 }

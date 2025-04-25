@@ -21,11 +21,21 @@
 
 typedef void(*frame_callback)(uint64_t width, uint64_t height, uint64_t data_size, void *data);
 
+struct rgba
+{
+    uint8_t r, g, b, a;
+};
+
+struct image
+{
+    uint64_t width, height;
+    struct rgba *pixels;
+};
+
 struct context
 {
     frame_callback frame_callback;
-    uint64_t size;
-    uint64_t image_bytes[];
+    struct image background;
 };
 
 FLOW_API void initialize(frame_callback frame_callback);

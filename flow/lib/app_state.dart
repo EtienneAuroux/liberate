@@ -10,8 +10,8 @@ import 'dart:developer' as dev;
 
 class AppState {
   static Image? image;
-  int imageHeight = 1;
-  int imageWidth = 1;
+  static double imageHeight = 1;
+  static double imageWidth = 1;
 
   static Event onNewImage = Event();
 
@@ -32,16 +32,14 @@ class AppState {
 
     Uint8List dataAsList = frame.data.cast<Uint8>().asTypedList(frame.dataSize);
 
-    dev.log('data: ${dataAsList.toString()}');
-
-    return;
-
     Completer completer = Completer();
     decodeImageFromPixels(dataAsList, frame.width, frame.height, PixelFormat.rgba8888, (Image result) {
       completer.complete(result);
     });
 
     image = await completer.future;
+    imageHeight = frame.height.toDouble();
+    imageWidth = frame.width.toDouble();
     onNewImage.broadcast();
   }
 }

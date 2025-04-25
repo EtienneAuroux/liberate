@@ -55,7 +55,35 @@ class CLayerBindings {
   late final _randomScreen = _randomScreenPtr.asFunction<void Function(int)>();
 }
 
-final class context extends ffi.Opaque {}
+final class rgba extends ffi.Struct {
+  @ffi.Uint8()
+  external int r;
+
+  @ffi.Uint8()
+  external int g;
+
+  @ffi.Uint8()
+  external int b;
+
+  @ffi.Uint8()
+  external int a;
+}
+
+final class image extends ffi.Struct {
+  @ffi.Uint64()
+  external int width;
+
+  @ffi.Uint64()
+  external int height;
+
+  external ffi.Pointer<rgba> pixels;
+}
+
+final class context extends ffi.Struct {
+  external frame_callback frame_callback1;
+
+  external image background;
+}
 
 typedef frame_callback
     = ffi.Pointer<ffi.NativeFunction<frame_callbackFunction>>;
