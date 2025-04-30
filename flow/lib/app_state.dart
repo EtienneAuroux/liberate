@@ -1,26 +1,32 @@
 import 'dart:async';
 import 'dart:ffi';
+import 'dart:math';
 import 'dart:typed_data';
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:event/event.dart';
 import 'package:flow/bindings.dart';
 
 import 'dart:developer' as dev;
 
+import 'package:flow/types.dart';
+
 class AppState {
-  static Image? image;
-  static double imageHeight = 1;
-  static double imageWidth = 1;
+  static Painting painting = Painting();
 
   static Event onNewImage = Event();
 
   static void initialize() {
-    cLayerBindings.initialize(Pointer.fromFunction<FuncPtrNewFrame>(_onNewFrame));
+    ui.Size size = ui.PlatformDispatcher.instance.views.first.physicalSize;
+    double pixelRatio = ui.PlatformDispatcher.instance.views.first.devicePixelRatio;
+
+    int maxWidth = max((size.width / pixelRatio).ceil(), 3500);
+    int maxHeight = max((size.height / pixelRatio).ceil(), 2000);
+
+    cLayerBindings.initialize(Pointer.fromFunction<FuncPtrNewFrame>(_onNewFrame), maxWidth, maxHeight);
   }
 
   static void _onNewFrame(int width, int height, int dataSize, Pointer<Void> data) {
-    dev.log('received new frame from c layer: $width, $height, $dataSize');
     FrameEvent frameEvent = FrameEvent(width, height, data, dataSize);
     _handleNewFrame(frameEvent);
   }
@@ -33,13 +39,13 @@ class AppState {
     Uint8List dataAsList = frame.data.cast<Uint8>().asTypedList(frame.dataSize);
 
     Completer completer = Completer();
-    decodeImageFromPixels(dataAsList, frame.width, frame.height, PixelFormat.rgba8888, (Image result) {
+    ui.decodeImageFromPixels(dataAsList, frame.width, frame.height, ui.PixelFormat.rgba8888, (ui.Image result) {
       completer.complete(result);
     });
 
-    image = await completer.future;
-    imageHeight = frame.height.toDouble();
-    imageWidth = frame.width.toDouble();
+    painting.image = await completer.future;
+    painting.height = frame.height.toDouble();
+    painting.width = frame.width.toDouble();
     onNewImage.broadcast();
   }
 }

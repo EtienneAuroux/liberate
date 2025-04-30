@@ -1,5 +1,9 @@
+import 'dart:math';
+
 import 'package:event/event.dart';
 import 'package:flow/app_state.dart';
+import 'package:flow/bindings.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 class Space extends StatefulWidget {
@@ -10,8 +14,12 @@ class Space extends StatefulWidget {
 }
 
 class _SpaceState extends State<Space> {
+  Random random = Random();
+
   void invokeSetState(EventArgs? e) {
+    //WidgetsBinding.instance.addPostFrameCallback((_) {
     setState(() {});
+    //});
   }
 
   @override
@@ -30,7 +38,17 @@ class _SpaceState extends State<Space> {
 
   @override
   Widget build(BuildContext context) {
-    return SpaceWidget();
+    return Listener(
+      onPointerDown: (event) {
+        if (event.buttons == kPrimaryMouseButton) {
+          // int seed = random.nextInt(5);
+          // cLayerBindings.randomScreen(seed);
+          cLayerBindings.draw_background(0, 0, 0);
+        } else {}
+      },
+      behavior: HitTestBehavior.opaque,
+      child: SpaceWidget(),
+    );
   }
 }
 
@@ -40,6 +58,11 @@ class SpaceWidget extends LeafRenderObjectWidget {
   @override
   RenderObject createRenderObject(BuildContext context) {
     return SpaceObject();
+  }
+
+  @override
+  void updateRenderObject(BuildContext context, SpaceObject renderObject) {
+    renderObject.markNeedsPaint();
   }
 }
 
@@ -57,12 +80,12 @@ class SpaceObject extends RenderBox {
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    if (AppState.image != null) {
-      context.canvas.save();
+    context.canvas.save();
+    if (AppState.painting.image != null) {
       paintImage(
         canvas: context.canvas,
-        rect: Rect.fromLTWH(100, 100, AppState.imageWidth, AppState.imageHeight),
-        image: AppState.image!,
+        rect: Rect.fromLTWH(0, 0, AppState.painting.width!, AppState.painting.height!),
+        image: AppState.painting.image!,
       );
     }
 

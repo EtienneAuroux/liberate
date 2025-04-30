@@ -1,65 +1,28 @@
-import 'dart:math';
-
-import 'package:event/event.dart';
 import 'package:flow/app_state.dart';
-import 'package:flow/bindings.dart';
 import 'package:flow/space.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import 'dart:developer' as dev;
-
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  AppState.initialize();
+  runApp(const HomePage());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
+  State<HomePage> createState() => _HomePageState();
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  Random random = Random();
-
+class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
-    AppState.initialize();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      onPointerDown: (event) {
-        if (event.buttons == kPrimaryMouseButton) {
-          int seed = random.nextInt(5);
-          dev.log('seed: $seed');
-          cLayerBindings.randomScreen(seed);
-        } else {}
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Space(),
-    );
+    return const Space();
   }
 }

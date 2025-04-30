@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #if _WIN32
 #include <windows.h>
@@ -17,13 +18,21 @@
 #define FLOW_API
 #endif
 
-#define message(format, ...) log_message(log_level, __func__, __FILE__, __LINE__, format,  __VA_ARGS__);
+#define square_size 150
+#define square_stroke_thickness 2
 
 typedef void(*frame_callback)(uint64_t width, uint64_t height, uint64_t data_size, void *data);
 
 struct rgba
 {
     uint8_t r, g, b, a;
+};
+
+struct colors
+{
+    struct rgba background_color;
+    struct rgba line_color;
+    struct rgba widget_color;
 };
 
 struct image
@@ -35,10 +44,13 @@ struct image
 struct context
 {
     frame_callback frame_callback;
+    struct colors colors;
     struct image background;
 };
 
-FLOW_API void initialize(frame_callback frame_callback);
+FLOW_API void initialize(frame_callback frame_callback, uint64_t width, uint64_t height);
 
 FLOW_API void randomScreen(uint64_t seed);
+
+FLOW_API void draw_background(double zoom, int64_t x_offset, int64_t y_offset);
 

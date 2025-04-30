@@ -29,17 +29,22 @@ class CLayerBindings {
 
   void initialize(
     frame_callback frame_callback,
+    int width,
+    int height,
   ) {
     return _initialize(
       frame_callback,
+      width,
+      height,
     );
   }
 
-  late final _initializePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(frame_callback)>>(
-          'initialize');
+  late final _initializePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              frame_callback, ffi.Uint64, ffi.Uint64)>>('initialize');
   late final _initialize =
-      _initializePtr.asFunction<void Function(frame_callback)>();
+      _initializePtr.asFunction<void Function(frame_callback, int, int)>();
 
   void randomScreen(
     int seed,
@@ -53,6 +58,25 @@ class CLayerBindings {
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'randomScreen');
   late final _randomScreen = _randomScreenPtr.asFunction<void Function(int)>();
+
+  void draw_background(
+    double zoom,
+    int x_offset,
+    int y_offset,
+  ) {
+    return _draw_background(
+      zoom,
+      x_offset,
+      y_offset,
+    );
+  }
+
+  late final _draw_backgroundPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Double, ffi.Int64, ffi.Int64)>>(
+      'draw_background');
+  late final _draw_background =
+      _draw_backgroundPtr.asFunction<void Function(double, int, int)>();
 }
 
 final class rgba extends ffi.Struct {
@@ -69,6 +93,14 @@ final class rgba extends ffi.Struct {
   external int a;
 }
 
+final class colors extends ffi.Struct {
+  external rgba background_color;
+
+  external rgba line_color;
+
+  external rgba widget_color;
+}
+
 final class image extends ffi.Struct {
   @ffi.Uint64()
   external int width;
@@ -82,6 +114,8 @@ final class image extends ffi.Struct {
 final class context extends ffi.Struct {
   external frame_callback frame_callback1;
 
+  external colors colors1;
+
   external image background;
 }
 
@@ -91,3 +125,7 @@ typedef frame_callbackFunction = ffi.Void Function(ffi.Uint64 width,
     ffi.Uint64 height, ffi.Uint64 data_size, ffi.Pointer<ffi.Void> data);
 typedef Dartframe_callbackFunction = void Function(
     int width, int height, int data_size, ffi.Pointer<ffi.Void> data);
+
+const int square_size = 150;
+
+const int square_stroke_thickness = 2;
