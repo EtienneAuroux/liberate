@@ -1,6 +1,7 @@
 import 'package:event/event.dart';
 import 'package:flow/app_state.dart';
 import 'package:flow/bindings.dart';
+import 'package:flow/types.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -51,7 +52,10 @@ class _SpaceState extends State<Space> {
           y += event.position.dy - dy;
           dx = event.position.dx;
           dy = event.position.dy;
-          cLayerBindings.draw_background(0, x.floor(), y.floor()); // need thread
+          if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
+            AppState.imageUpdateStatus = LengthyProcess.ongoing;
+            cLayerBindings.draw_background(0, -x.floor(), -y.floor());
+          }
         }
       },
       behavior: HitTestBehavior.opaque,

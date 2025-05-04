@@ -16,6 +16,8 @@ class AppState {
 
   static Event onNewImage = Event();
 
+  static LengthyProcess imageUpdateStatus = LengthyProcess.unknown;
+
   static void initialize() {
     ui.Size size = ui.PlatformDispatcher.instance.views.first.physicalSize;
     double pixelRatio = ui.PlatformDispatcher.instance.views.first.devicePixelRatio;
@@ -33,6 +35,7 @@ class AppState {
 
   static Future<void> _handleNewFrame(FrameEvent? frame) async {
     if (frame == null) {
+      imageUpdateStatus = LengthyProcess.failed;
       return;
     }
 
@@ -47,6 +50,8 @@ class AppState {
     painting.height = frame.height.toDouble();
     painting.width = frame.width.toDouble();
     onNewImage.broadcast();
+
+    imageUpdateStatus = LengthyProcess.done;
   }
 }
 

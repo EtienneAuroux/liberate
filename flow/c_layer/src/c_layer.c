@@ -50,14 +50,23 @@ FLOW_API void thread_entry_point(struct image_settings *settings)
     return;
   }
 
+  int true_x_offset = settings->x_offset % square_size;
+  int true_y_offset = settings->y_offset % square_size;
+  
+
   for (int y = 0; y < context.background.height; y++) 
   {
-    bool y_ok = (y + settings->y_offset + square_size / 2) % square_size >= square_size - square_stroke_thickness / 2 || (y + settings->y_offset + square_size / 2) % square_size <= square_stroke_thickness / 2;
-    bool y_spaces = (y + square_stroke_spacing / 4) % square_stroke_spacing >= square_stroke_spacing * 3 / 2 || (y + square_stroke_spacing / 4) % square_stroke_spacing <= square_stroke_spacing / 2;
+    int y_position = true_y_offset == 0 ? 0 : y % true_y_offset;
+    bool y_ok = y_position >= square_size - square_stroke_thickness / 2 || y_position < square_stroke_thickness;
+    // bool y_ok = (y + settings->y_offset + square_size / 2) % square_size >= square_size - square_stroke_thickness / 2 || (y + settings->y_offset + square_size / 2) % square_size <= square_stroke_thickness / 2;
+    bool y_spaces = y % (2 * square_stroke_spacing) <= square_stroke_spacing;
+
     for (int x = 0; x < context.background.width; x++)
     {
-      bool x_ok = (x + settings->x_offset + square_size / 2) % square_size >= square_size - square_stroke_thickness / 2 || (x + settings->x_offset + square_size / 2) % square_size <= square_stroke_thickness / 2;
-      bool x_spaces = (x + square_stroke_spacing / 4) % square_stroke_spacing >= square_stroke_spacing * 3 / 2 || (x + square_stroke_spacing / 4) % square_stroke_spacing <= square_stroke_spacing / 2;
+      int x_position = true_x_offset == 0 ? 0 : x % true_x_offset;
+      bool x_ok = x_position >= square_size - square_stroke_thickness / 2 || x_position < square_stroke_thickness;
+      // bool x_ok = (x + settings->x_offset + square_size / 2) % square_size >= square_size - square_stroke_thickness / 2 || (x + settings->x_offset + square_size / 2) % square_size <= square_stroke_thickness / 2;
+      bool x_spaces = x % (2 * square_stroke_spacing) <= square_stroke_spacing;
       if ((y_ok && x_spaces) || (x_ok && y_spaces))
       {
         context.background.pixels[y * context.background.width + x] = context.colors.line_color;

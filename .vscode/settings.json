@@ -5,6 +5,7 @@
         "algorithm": "c",
         "limits": "c",
         "utility": "c",
-        "xutility": "c"
+        "xutility": "c",
+        "cstdlib": "c"
     }
 }

@@ -5,3 +5,10 @@ class Painting {
   double? height;
   Image? image;
 }
+
+enum LengthyProcess {
+  unknown,
+  ongoing,
+  done,
+  failed,
+}
