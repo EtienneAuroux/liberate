@@ -12,6 +12,7 @@ add_library(c_layer SHARED
 set_target_properties(c_layer PROPERTIES
   PUBLIC_HEADER c_layer.h
   OUTPUT_NAME "c_layer"
+  C_STANDARD 11
 )
 
 target_compile_definitions(c_layer PUBLIC DART_SHARED_LIB)
