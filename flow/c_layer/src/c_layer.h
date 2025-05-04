@@ -21,7 +21,7 @@
 
 #define square_size 150
 #define square_stroke_thickness 2
-#define square_stroke_spacing 25
+#define square_stroke_spacing 50
 
 typedef void(*frame_callback)(uint64_t width, uint64_t height, uint64_t data_size, void *data);
 

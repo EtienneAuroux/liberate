@@ -181,4 +181,4 @@ const int square_size = 150;
 
 const int square_stroke_thickness = 2;
 
-const int square_stroke_spacing = 25;
+const int square_stroke_spacing = 50;

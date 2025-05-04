@@ -50,24 +50,20 @@ FLOW_API void thread_entry_point(struct image_settings *settings)
     return;
   }
 
-  int true_x_offset = settings->x_offset % square_size;
-  int true_y_offset = settings->y_offset % square_size;
-  
+  int total_x_offset = settings->x_offset + square_size / 2;
+  int total_y_offset = settings->y_offset + square_size / 2;
 
   for (int y = 0; y < context.background.height; y++) 
   {
-    int y_position = true_y_offset == 0 ? 0 : y % true_y_offset;
-    bool y_ok = y_position >= square_size - square_stroke_thickness / 2 || y_position < square_stroke_thickness;
-    // bool y_ok = (y + settings->y_offset + square_size / 2) % square_size >= square_size - square_stroke_thickness / 2 || (y + settings->y_offset + square_size / 2) % square_size <= square_stroke_thickness / 2;
-    bool y_spaces = y % (2 * square_stroke_spacing) <= square_stroke_spacing;
-
+    int true_y = abs(y - total_y_offset) ; 
+    bool horizontal_line = true_y % square_size >= 0 && true_y % square_size < square_stroke_thickness;
+    bool vertical_space = (true_y + square_stroke_spacing / 4) % square_stroke_spacing >= 0 && (true_y + square_stroke_spacing / 4) % square_stroke_spacing < square_stroke_spacing / 2;
     for (int x = 0; x < context.background.width; x++)
     {
-      int x_position = true_x_offset == 0 ? 0 : x % true_x_offset;
-      bool x_ok = x_position >= square_size - square_stroke_thickness / 2 || x_position < square_stroke_thickness;
-      // bool x_ok = (x + settings->x_offset + square_size / 2) % square_size >= square_size - square_stroke_thickness / 2 || (x + settings->x_offset + square_size / 2) % square_size <= square_stroke_thickness / 2;
-      bool x_spaces = x % (2 * square_stroke_spacing) <= square_stroke_spacing;
-      if ((y_ok && x_spaces) || (x_ok && y_spaces))
+      int true_x = abs(x - total_x_offset) ;
+      bool vertical_line = true_x % square_size >= 0 && true_x % square_size < square_stroke_thickness;
+      bool horizontal_space = (true_x + square_stroke_spacing / 4) % square_stroke_spacing >= 0 && (true_x + square_stroke_spacing / 4) % square_stroke_spacing < square_stroke_spacing / 2;
+      if ((horizontal_line && horizontal_space) || (vertical_line && vertical_space))
       {
         context.background.pixels[y * context.background.width + x] = context.colors.line_color;
       }

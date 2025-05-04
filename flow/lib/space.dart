@@ -54,7 +54,7 @@ class _SpaceState extends State<Space> {
           dy = event.position.dy;
           if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
             AppState.imageUpdateStatus = LengthyProcess.ongoing;
-            cLayerBindings.draw_background(0, -x.floor(), -y.floor());
+            cLayerBindings.draw_background(0, x.floor(), y.floor());
           }
         }
       },
