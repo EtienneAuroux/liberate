@@ -77,6 +77,20 @@ class CLayerBindings {
       'draw_background');
   late final _draw_background =
       _draw_backgroundPtr.asFunction<void Function(double, int, int)>();
+
+  void thread_entry_point(
+    ffi.Pointer<image_settings> settings,
+  ) {
+    return _thread_entry_point(
+      settings,
+    );
+  }
+
+  late final _thread_entry_pointPtr = _lookup<
+          ffi.NativeFunction<ffi.Void Function(ffi.Pointer<image_settings>)>>(
+      'thread_entry_point');
+  late final _thread_entry_point = _thread_entry_pointPtr
+      .asFunction<void Function(ffi.Pointer<image_settings>)>();
 }
 
 final class rgba extends ffi.Struct {
@@ -101,6 +115,17 @@ final class colors extends ffi.Struct {
   external rgba widget_color;
 }
 
+final class image_settings extends ffi.Struct {
+  @ffi.Double()
+  external double zoom;
+
+  @ffi.Uint64()
+  external int x_offset;
+
+  @ffi.Uint64()
+  external int y_offset;
+}
+
 final class image extends ffi.Struct {
   @ffi.Uint64()
   external int width;
@@ -117,6 +142,10 @@ final class context extends ffi.Struct {
   external colors colors1;
 
   external image background;
+
+  external thrd_t thread;
+
+  external mtx_t mutex;
 }
 
 typedef frame_callback
@@ -126,6 +155,30 @@ typedef frame_callbackFunction = ffi.Void Function(ffi.Uint64 width,
 typedef Dartframe_callbackFunction = void Function(
     int width, int height, int data_size, ffi.Pointer<ffi.Void> data);
 
+final class thrd_t extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> _Handle;
+
+  @ffi.Uint32()
+  external int _Tid;
+}
+
+final class mtx_t extends ffi.Struct {
+  @ffi.UintPtr()
+  external int _Type;
+
+  external ffi.Pointer<ffi.Void> _Ptr;
+
+  external ffi.Pointer<ffi.Void> _Cv;
+
+  @ffi.Uint32()
+  external int _Owner;
+
+  @ffi.Uint32()
+  external int _Cnt;
+}
+
 const int square_size = 150;
 
 const int square_stroke_thickness = 2;
+
+const int square_stroke_spacing = 25;

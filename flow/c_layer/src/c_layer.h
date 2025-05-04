@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <threads.h>
 
 #if _WIN32
 #include <windows.h>
@@ -20,6 +21,7 @@
 
 #define square_size 150
 #define square_stroke_thickness 2
+#define square_stroke_spacing 25
 
 typedef void(*frame_callback)(uint64_t width, uint64_t height, uint64_t data_size, void *data);
 
@@ -35,6 +37,13 @@ struct colors
     struct rgba widget_color;
 };
 
+struct image_settings
+{
+    double zoom;
+    uint64_t x_offset;
+    uint64_t y_offset;
+};
+
 struct image
 {
     uint64_t width, height;
@@ -46,6 +55,8 @@ struct context
     frame_callback frame_callback;
     struct colors colors;
     struct image background;
+    thrd_t thread;
+    mtx_t mutex;
 };
 
 FLOW_API void initialize(frame_callback frame_callback, uint64_t width, uint64_t height);
@@ -54,3 +65,4 @@ FLOW_API void randomScreen(uint64_t seed);
 
 FLOW_API void draw_background(double zoom, int64_t x_offset, int64_t y_offset);
 
+FLOW_API void thread_entry_point(struct image_settings *settings);

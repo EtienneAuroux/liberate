@@ -1,10 +1,10 @@
-import 'dart:math';
-
 import 'package:event/event.dart';
 import 'package:flow/app_state.dart';
 import 'package:flow/bindings.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+
+import 'dart:developer' as dev;
 
 class Space extends StatefulWidget {
   const Space({super.key});
@@ -14,12 +14,10 @@ class Space extends StatefulWidget {
 }
 
 class _SpaceState extends State<Space> {
-  Random random = Random();
+  double x = 0, dx = 0, y = 0, dy = 0;
 
   void invokeSetState(EventArgs? e) {
-    //WidgetsBinding.instance.addPostFrameCallback((_) {
     setState(() {});
-    //});
   }
 
   @override
@@ -27,6 +25,8 @@ class _SpaceState extends State<Space> {
     super.initState();
 
     AppState.onNewImage.subscribe(invokeSetState);
+
+    cLayerBindings.draw_background(0, 0, 0);
   }
 
   @override
@@ -41,10 +41,18 @@ class _SpaceState extends State<Space> {
     return Listener(
       onPointerDown: (event) {
         if (event.buttons == kPrimaryMouseButton) {
-          // int seed = random.nextInt(5);
-          // cLayerBindings.randomScreen(seed);
-          cLayerBindings.draw_background(0, 0, 0);
-        } else {}
+          dx = event.position.dx;
+          dy = event.position.dy;
+        }
+      },
+      onPointerMove: (event) {
+        if (event.buttons == kPrimaryMouseButton) {
+          x += event.position.dx - dx;
+          y += event.position.dy - dy;
+          dx = event.position.dx;
+          dy = event.position.dy;
+          cLayerBindings.draw_background(0, x.floor(), y.floor()); // need thread
+        }
       },
       behavior: HitTestBehavior.opaque,
       child: SpaceWidget(),
