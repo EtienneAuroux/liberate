@@ -124,6 +124,25 @@ final class image_settings extends ffi.Struct {
 
   @ffi.Uint64()
   external int y_offset;
+
+  @ffi.Uint64()
+  external int start_row;
+
+  @ffi.Uint64()
+  external int end_row;
+}
+
+final class image_thread extends ffi.Struct {
+  external image_settings settings;
+
+  external thrd_t thread;
+}
+
+final class thrd_t extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> _Handle;
+
+  @ffi.Uint32()
+  external int _Tid;
 }
 
 final class image extends ffi.Struct {
@@ -143,7 +162,10 @@ final class context extends ffi.Struct {
 
   external image background;
 
-  external thrd_t thread;
+  @ffi.Uint8()
+  external int num_image_threads;
+
+  external ffi.Pointer<image_thread> image_threads;
 
   external mtx_t mutex;
 }
@@ -154,13 +176,6 @@ typedef frame_callbackFunction = ffi.Void Function(ffi.Uint64 width,
     ffi.Uint64 height, ffi.Uint64 data_size, ffi.Pointer<ffi.Void> data);
 typedef Dartframe_callbackFunction = void Function(
     int width, int height, int data_size, ffi.Pointer<ffi.Void> data);
-
-final class thrd_t extends ffi.Struct {
-  external ffi.Pointer<ffi.Void> _Handle;
-
-  @ffi.Uint32()
-  external int _Tid;
-}
 
 final class mtx_t extends ffi.Struct {
   @ffi.UintPtr()

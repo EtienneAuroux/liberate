@@ -42,6 +42,14 @@ struct image_settings
     double zoom;
     uint64_t x_offset;
     uint64_t y_offset;
+    uint64_t start_row;
+    uint64_t end_row;
+};
+
+struct image_thread
+{
+    struct image_settings settings;
+    thrd_t thread;
 };
 
 struct image
@@ -55,7 +63,8 @@ struct context
     frame_callback frame_callback;
     struct colors colors;
     struct image background;
-    thrd_t thread;
+    uint8_t num_image_threads;
+    struct image_thread *image_threads;
     mtx_t mutex;
 };
 
