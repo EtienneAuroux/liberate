@@ -6,6 +6,7 @@
         "limits": "c",
         "utility": "c",
         "xutility": "c",
-        "cstdlib": "c"
+        "cstdlib": "c",
+        "cmath": "c"
     }
 }

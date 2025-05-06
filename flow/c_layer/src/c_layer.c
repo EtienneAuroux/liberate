@@ -50,19 +50,21 @@ FLOW_API void draw_background(double zoom, int64_t x_offset, int64_t y_offset)
 
 FLOW_API void image_thread_entry_point(struct image_settings *settings)
 {
-  int total_x_offset = settings->x_offset + square_size / 2;
-  int total_y_offset = settings->y_offset + square_size / 2;
+  int square = round_double_to_int(square_size * settings->zoom);
+  int square_dash_size = square / 3;
+  int total_x_offset = settings->x_offset + square / 2;
+  int total_y_offset = settings->y_offset + square / 2;
 
   for (int y = settings->start_row; y < settings->end_row; y++) 
   {
     int true_y = abs(y - total_y_offset) ; 
-    bool horizontal_line = true_y % square_size >= 0 && true_y % square_size < square_stroke_thickness;
-    bool vertical_space = (true_y + square_stroke_spacing / 4) % square_stroke_spacing >= 0 && (true_y + square_stroke_spacing / 4) % square_stroke_spacing < square_stroke_spacing / 2;
+    bool horizontal_line = true_y % square >= 0 && true_y % square < square_stroke_thickness;
+    bool vertical_space = (true_y + square_dash_size / 4) % square_dash_size >= 0 && (true_y + square_dash_size / 4) % square_dash_size < square_dash_size / 2;
     for (int x = 0; x < context.background.width; x++)
     {
       int true_x = abs(x - total_x_offset) ;
-      bool vertical_line = true_x % square_size >= 0 && true_x % square_size < square_stroke_thickness;
-      bool horizontal_space = (true_x + square_stroke_spacing / 4) % square_stroke_spacing >= 0 && (true_x + square_stroke_spacing / 4) % square_stroke_spacing < square_stroke_spacing / 2;
+      bool vertical_line = true_x % square >= 0 && true_x % square < square_stroke_thickness;
+      bool horizontal_space = (true_x + square_dash_size / 4) % square_dash_size >= 0 && (true_x + square_dash_size / 4) % square_dash_size < square_dash_size / 2;
       if ((horizontal_line && horizontal_space) || (vertical_line && vertical_space))
       {
         context.background.pixels[y * context.background.width + x] = context.colors.line_color;
@@ -73,4 +75,9 @@ FLOW_API void image_thread_entry_point(struct image_settings *settings)
       }
     }
   }
+}
+
+FLOW_API int round_double_to_int(double x)
+{
+  return (int)(x + 0.5 - (x<0));
 }

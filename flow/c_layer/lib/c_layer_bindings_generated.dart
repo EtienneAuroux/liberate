@@ -101,6 +101,20 @@ class CLayerBindings {
       'image_thread_entry_point');
   late final _image_thread_entry_point = _image_thread_entry_pointPtr
       .asFunction<void Function(ffi.Pointer<image_settings>)>();
+
+  int round_double_to_int(
+    double x,
+  ) {
+    return _round_double_to_int(
+      x,
+    );
+  }
+
+  late final _round_double_to_intPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Double)>>(
+          'round_double_to_int');
+  late final _round_double_to_int =
+      _round_double_to_intPtr.asFunction<int Function(double)>();
 }
 
 final class rgba extends ffi.Struct {

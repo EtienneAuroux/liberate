@@ -16,9 +16,11 @@ class Space extends StatefulWidget {
 
 class _SpaceState extends State<Space> {
   final int margin = 100;
+  final double minZoom = 0.1;
+  final double maxZoom = 10;
 
   double x = 0, dx = 0, y = 0, dy = 0;
-  double zoom = 0;
+  double zoom = 1;
 
   Size _spaceSize = Size(0, 0);
   Size get spaceSize => _spaceSize;
@@ -26,7 +28,18 @@ class _SpaceState extends State<Space> {
     if (AppState.imageUpdateStatus != LengthyProcess.ongoing && (size.width != _spaceSize.width || size.height != _spaceSize.height)) {
       _spaceSize = size;
       AppState.imageUpdateStatus = LengthyProcess.ongoing;
-      cLayerBindings.update_background_size(size.width.ceil() + margin, size.height.ceil() + margin, 0, x.floor(), x.floor());
+      cLayerBindings.update_background_size(size.width.ceil() + margin, size.height.ceil() + margin, zoom, x.floor(), x.floor());
+    }
+  }
+
+  double dampenZoom(double scale) {
+    int dampingFactor = 10;
+    if (scale >= 1) {
+      double increase = scale - 1;
+      return 1 + increase / dampingFactor;
+    } else {
+      double decrease = 1 - scale;
+      return 1 - decrease / dampingFactor;
     }
   }
 
@@ -40,7 +53,7 @@ class _SpaceState extends State<Space> {
 
     AppState.onNewImage.subscribe(invokeSetState);
 
-    cLayerBindings.draw_background(0, 0, 0);
+    cLayerBindings.draw_background(zoom, 0, 0);
   }
 
   @override
@@ -54,23 +67,27 @@ class _SpaceState extends State<Space> {
   Widget build(BuildContext context) {
     spaceSize = MediaQuery.of(context).size;
 
-    return Listener(
-      onPointerDown: (event) {
-        if (event.buttons == kPrimaryMouseButton) {
-          dx = event.position.dx;
-          dy = event.position.dy;
-        }
+    return GestureDetector(
+      onScaleStart: (details) {
+        dx = details.localFocalPoint.dx;
+        dy = details.localFocalPoint.dy;
       },
-      onPointerMove: (event) {
-        if (event.buttons == kPrimaryMouseButton) {
-          x += event.position.dx - dx;
-          y += event.position.dy - dy;
-          dx = event.position.dx;
-          dy = event.position.dy;
-          if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
-            AppState.imageUpdateStatus = LengthyProcess.ongoing;
-            cLayerBindings.draw_background(0, x.floor(), y.floor());
+      onScaleUpdate: (details) {
+        if (details.scale == 1) {
+          y += details.localFocalPoint.dy - dy;
+          x += details.localFocalPoint.dx - dx;
+          dx = details.localFocalPoint.dx;
+          dy = details.localFocalPoint.dy;
+        } else if (details.pointerCount == 2) {
+          double newZoom = zoom * dampenZoom(details.scale);
+          if (newZoom >= minZoom && newZoom <= maxZoom) {
+            zoom = newZoom;
           }
+        }
+
+        if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
+          AppState.imageUpdateStatus = LengthyProcess.ongoing;
+          cLayerBindings.draw_background(zoom, x.floor(), y.floor());
         }
       },
       behavior: HitTestBehavior.opaque,
