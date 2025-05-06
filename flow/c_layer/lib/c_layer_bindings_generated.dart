@@ -46,18 +46,28 @@ class CLayerBindings {
   late final _initialize =
       _initializePtr.asFunction<void Function(frame_callback, int, int)>();
 
-  void randomScreen(
-    int seed,
+  void update_background_size(
+    int width,
+    int height,
+    double zoom,
+    int x_offset,
+    int y_offset,
   ) {
-    return _randomScreen(
-      seed,
+    return _update_background_size(
+      width,
+      height,
+      zoom,
+      x_offset,
+      y_offset,
     );
   }
 
-  late final _randomScreenPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
-          'randomScreen');
-  late final _randomScreen = _randomScreenPtr.asFunction<void Function(int)>();
+  late final _update_background_sizePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Uint64, ffi.Uint64, ffi.Double, ffi.Int64,
+              ffi.Int64)>>('update_background_size');
+  late final _update_background_size = _update_background_sizePtr
+      .asFunction<void Function(int, int, double, int, int)>();
 
   void draw_background(
     double zoom,
@@ -78,18 +88,18 @@ class CLayerBindings {
   late final _draw_background =
       _draw_backgroundPtr.asFunction<void Function(double, int, int)>();
 
-  void thread_entry_point(
+  void image_thread_entry_point(
     ffi.Pointer<image_settings> settings,
   ) {
-    return _thread_entry_point(
+    return _image_thread_entry_point(
       settings,
     );
   }
 
-  late final _thread_entry_pointPtr = _lookup<
+  late final _image_thread_entry_pointPtr = _lookup<
           ffi.NativeFunction<ffi.Void Function(ffi.Pointer<image_settings>)>>(
-      'thread_entry_point');
-  late final _thread_entry_point = _thread_entry_pointPtr
+      'image_thread_entry_point');
+  late final _image_thread_entry_point = _image_thread_entry_pointPtr
       .asFunction<void Function(ffi.Pointer<image_settings>)>();
 }
 

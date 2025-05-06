@@ -15,7 +15,20 @@ class Space extends StatefulWidget {
 }
 
 class _SpaceState extends State<Space> {
+  final int margin = 100;
+
   double x = 0, dx = 0, y = 0, dy = 0;
+  double zoom = 0;
+
+  Size _spaceSize = Size(0, 0);
+  Size get spaceSize => _spaceSize;
+  set spaceSize(Size size) {
+    if (AppState.imageUpdateStatus != LengthyProcess.ongoing && (size.width != _spaceSize.width || size.height != _spaceSize.height)) {
+      _spaceSize = size;
+      AppState.imageUpdateStatus = LengthyProcess.ongoing;
+      cLayerBindings.update_background_size(size.width.ceil() + margin, size.height.ceil() + margin, 0, x.floor(), x.floor());
+    }
+  }
 
   void invokeSetState(EventArgs? e) {
     setState(() {});
@@ -39,6 +52,8 @@ class _SpaceState extends State<Space> {
 
   @override
   Widget build(BuildContext context) {
+    spaceSize = MediaQuery.of(context).size;
+
     return Listener(
       onPointerDown: (event) {
         if (event.buttons == kPrimaryMouseButton) {

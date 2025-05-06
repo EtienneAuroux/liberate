@@ -8,9 +8,6 @@ FLOW_API void initialize(frame_callback frame_callback, uint64_t width, uint64_t
   context.background.width = width;
   context.background.height = height;
 
-  // Initialize the mutex
-  mtx_init(&context.mutex, mtx_plain);
-
   // Allocate threads
   context.num_image_threads = 4;
   context.image_threads = malloc(context.num_image_threads * sizeof(struct image_thread));
@@ -23,14 +20,11 @@ FLOW_API void initialize(frame_callback frame_callback, uint64_t width, uint64_t
   context.background.pixels = malloc(context.background.height * context.background.width * sizeof(struct rgba));
 }
 
-FLOW_API void randomScreen(uint64_t seed) 
+FLOW_API void update_background_size(uint64_t width, uint64_t height, double zoom, int64_t x_offset, int64_t y_offset)
 {
-  for (int pixel_index = 0; pixel_index < context.background.height * context.background.width; pixel_index++)
-  {
-    context.background.pixels[pixel_index] = (struct rgba){51 * seed, 41 * seed, 31 * seed, 255};
-  }
-
-  context.frame_callback(context.background.width, context.background.height, context.background.width * context.background.height * sizeof(struct rgba), context.background.pixels);
+  context.background.width = width;
+  context.background.height = height;
+  draw_background(zoom, x_offset, y_offset);
 }
 
 FLOW_API void draw_background(double zoom, int64_t x_offset, int64_t y_offset)
@@ -43,7 +37,7 @@ FLOW_API void draw_background(double zoom, int64_t x_offset, int64_t y_offset)
     context.image_threads[i].settings.start_row = i * context.background.height / context.num_image_threads;
     context.image_threads[i].settings.end_row = (i + 1) * context.background.height / context.num_image_threads;
 
-    thrd_create(&context.image_threads[i].thread, thread_entry_point, &context.image_threads[i].settings);
+    thrd_create(&context.image_threads[i].thread, image_thread_entry_point, &context.image_threads[i].settings);
   }
 
   for (int i = 0; i < context.num_image_threads; i++)
@@ -54,13 +48,8 @@ FLOW_API void draw_background(double zoom, int64_t x_offset, int64_t y_offset)
   context.frame_callback(context.background.width, context.background.height, context.background.width * context.background.height * sizeof(struct rgba), context.background.pixels);
 }
 
-FLOW_API void thread_entry_point(struct image_settings *settings)
+FLOW_API void image_thread_entry_point(struct image_settings *settings)
 {
-  // if (mtx_trylock(&context.mutex) == thrd_busy)
-  // {
-  //   return;
-  // }
-
   int total_x_offset = settings->x_offset + square_size / 2;
   int total_y_offset = settings->y_offset + square_size / 2;
 
@@ -84,6 +73,4 @@ FLOW_API void thread_entry_point(struct image_settings *settings)
       }
     }
   }
-
-  // mtx_unlock(&context.mutex);
 }

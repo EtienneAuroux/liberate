@@ -70,8 +70,8 @@ struct context
 
 FLOW_API void initialize(frame_callback frame_callback, uint64_t width, uint64_t height);
 
-FLOW_API void randomScreen(uint64_t seed);
+FLOW_API void update_background_size(uint64_t width, uint64_t height, double zoom, int64_t x_offset, int64_t y_offset);
 
 FLOW_API void draw_background(double zoom, int64_t x_offset, int64_t y_offset);
 
-FLOW_API void thread_entry_point(struct image_settings *settings);
+FLOW_API void image_thread_entry_point(struct image_settings *settings);
