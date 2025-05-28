@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 
 import 'package:event/event.dart';
 import 'package:flow/bindings.dart';
+import 'package:flow/conversions.dart';
 
 import 'dart:developer' as dev;
 
@@ -13,6 +14,8 @@ import 'package:flow/types.dart';
 
 class AppState {
   static Painting painting = Painting();
+
+  static Conversions conversions = Conversions();
 
   static Event onNewImage = Event();
 

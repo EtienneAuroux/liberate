@@ -32,17 +32,6 @@ class _SpaceState extends State<Space> {
     }
   }
 
-  double dampenZoom(double scale) {
-    int dampingFactor = 10;
-    if (scale >= 1) {
-      double increase = scale - 1;
-      return 1 + increase / dampingFactor;
-    } else {
-      double decrease = 1 - scale;
-      return 1 - decrease / dampingFactor;
-    }
-  }
-
   void invokeSetState(EventArgs? e) {
     setState(() {});
   }
@@ -79,7 +68,7 @@ class _SpaceState extends State<Space> {
           dx = details.localFocalPoint.dx;
           dy = details.localFocalPoint.dy;
         } else if (details.pointerCount == 2) {
-          double newZoom = zoom * dampenZoom(details.scale);
+          double newZoom = zoom * AppState.conversions.dampenZoom(details.scale);
           if (newZoom >= minZoom && newZoom <= maxZoom) {
             zoom = newZoom;
           }
