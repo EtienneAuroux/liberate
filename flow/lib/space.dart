@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:event/event.dart';
 import 'package:flow/app_state.dart';
 import 'package:flow/bindings.dart';
@@ -22,13 +24,65 @@ class _SpaceState extends State<Space> {
   double x = 0, dx = 0, y = 0, dy = 0;
   double zoom = 1;
 
-  Size _spaceSize = Size(0, 0);
+  Size _spaceSize = Size.zero;
   Size get spaceSize => _spaceSize;
   set spaceSize(Size size) {
     if (AppState.imageUpdateStatus != LengthyProcess.ongoing && (size.width != _spaceSize.width || size.height != _spaceSize.height)) {
       _spaceSize = size;
       AppState.imageUpdateStatus = LengthyProcess.ongoing;
       cLayerBindings.update_background_size(size.width.ceil() + margin, size.height.ceil() + margin, zoom, x.floor(), x.floor());
+    }
+  }
+
+  Widget platformListener(Widget child) {
+    if (Platform.isWindows) {
+      return Listener(
+        onPointerSignal: (event) {
+          if (event is PointerScrollEvent) {
+            dev.log('${event.scrollDelta}');
+            double newZoom = zoom * AppState.conversions.dampenZoom(event.scrollDelta.dy > 0 ? 2 : 0.5);
+            if (newZoom >= minZoom && newZoom <= maxZoom) {
+              zoom = newZoom;
+            }
+            if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
+              AppState.imageUpdateStatus = LengthyProcess.ongoing;
+              cLayerBindings.draw_background(zoom, x.floor(), y.floor());
+            }
+          }
+        },
+        onPointerDown: (event) {
+          dev.log('pointer down: ${event.buttons}');
+        },
+        behavior: HitTestBehavior.opaque,
+        child: child,
+      );
+    } else {
+      return GestureDetector(
+        onScaleStart: (details) {
+          dx = details.localFocalPoint.dx;
+          dy = details.localFocalPoint.dy;
+        },
+        onScaleUpdate: (details) {
+          if (details.scale == 1) {
+            y += details.localFocalPoint.dy - dy;
+            x += details.localFocalPoint.dx - dx;
+            dx = details.localFocalPoint.dx;
+            dy = details.localFocalPoint.dy;
+          } else if (details.pointerCount == 2) {
+            double newZoom = zoom * AppState.conversions.dampenZoom(details.scale);
+            if (newZoom >= minZoom && newZoom <= maxZoom) {
+              zoom = newZoom;
+            }
+          }
+
+          if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
+            AppState.imageUpdateStatus = LengthyProcess.ongoing;
+            cLayerBindings.draw_background(zoom, x.floor(), y.floor());
+          }
+        },
+        behavior: HitTestBehavior.opaque,
+        child: child,
+      );
     }
   }
 
@@ -56,32 +110,7 @@ class _SpaceState extends State<Space> {
   Widget build(BuildContext context) {
     spaceSize = MediaQuery.of(context).size;
 
-    return GestureDetector(
-      onScaleStart: (details) {
-        dx = details.localFocalPoint.dx;
-        dy = details.localFocalPoint.dy;
-      },
-      onScaleUpdate: (details) {
-        if (details.scale == 1) {
-          y += details.localFocalPoint.dy - dy;
-          x += details.localFocalPoint.dx - dx;
-          dx = details.localFocalPoint.dx;
-          dy = details.localFocalPoint.dy;
-        } else if (details.pointerCount == 2) {
-          double newZoom = zoom * AppState.conversions.dampenZoom(details.scale);
-          if (newZoom >= minZoom && newZoom <= maxZoom) {
-            zoom = newZoom;
-          }
-        }
-
-        if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
-          AppState.imageUpdateStatus = LengthyProcess.ongoing;
-          cLayerBindings.draw_background(zoom, x.floor(), y.floor());
-        }
-      },
-      behavior: HitTestBehavior.opaque,
-      child: SpaceWidget(),
-    );
+    return platformListener(SpaceWidget());
   }
 }
 
