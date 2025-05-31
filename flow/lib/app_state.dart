@@ -56,15 +56,6 @@ class AppState {
 
     imageUpdateStatus = LengthyProcess.done;
   }
+
+  static Player player = Player();
 }
-
-class FrameEvent extends EventArgs {
-  final int width;
-  final int height;
-  final int dataSize;
-  final Pointer<Void> data;
-
-  FrameEvent(this.width, this.height, this.data, this.dataSize);
-}
-
-class Metrics {}

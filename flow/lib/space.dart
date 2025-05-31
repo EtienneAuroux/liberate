@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:event/event.dart';
@@ -17,12 +18,17 @@ class Space extends StatefulWidget {
 }
 
 class _SpaceState extends State<Space> {
+  late Timer timer;
+
   final int margin = 100;
   final double minZoom = 0.1;
   final double maxZoom = 10;
 
+  bool leftClickDown = false;
+
   double x = 0, dx = 0, y = 0, dy = 0;
   double zoom = 1;
+  Offset hoverPosition = Offset.zero;
 
   Size _spaceSize = Size.zero;
   Size get spaceSize => _spaceSize;
@@ -34,15 +40,24 @@ class _SpaceState extends State<Space> {
     }
   }
 
-  Widget platformListener(Widget child) {
+  Widget platformListener(Widget child, Size screenSize) {
     if (Platform.isWindows) {
       return Listener(
+        onPointerHover: (event) {
+          hoverPosition = event.localPosition;
+          if (AppState.player.alive) {
+            AppState.player.setSpeedAndAngle(hoverPosition);
+          }
+        },
         onPointerSignal: (event) {
           if (event is PointerScrollEvent) {
-            dev.log('${event.scrollDelta}');
-            double newZoom = zoom * AppState.conversions.dampenZoom(event.scrollDelta.dy > 0 ? 2 : 0.5);
+            double dampenedZoom = AppState.conversions.dampenZoom(event.scrollDelta.dy > 0 ? 0.75 : 1.5);
+            double newZoom = zoom * dampenedZoom;
             if (newZoom >= minZoom && newZoom <= maxZoom) {
+              Offset offset = event.localPosition * (newZoom - zoom);
               zoom = newZoom;
+              x -= offset.dx;
+              y -= offset.dy;
             }
             if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
               AppState.imageUpdateStatus = LengthyProcess.ongoing;
@@ -51,7 +66,33 @@ class _SpaceState extends State<Space> {
           }
         },
         onPointerDown: (event) {
-          dev.log('pointer down: ${event.buttons}');
+          if (event.buttons == 1) {
+            leftClickDown = true;
+            dx = event.localPosition.dx;
+            dy = event.localPosition.dy;
+          } else if (event.buttons == 2) {
+            if (!AppState.player.alive) {
+              AppState.player.initializePosition(event.localPosition);
+              AppState.player.alive = true;
+            }
+          }
+        },
+        onPointerMove: (event) {
+          if (event.buttons == 1 && leftClickDown) {
+            x += event.localPosition.dx - dx;
+            y += event.localPosition.dy - dy;
+            dx = event.localPosition.dx;
+            dy = event.localPosition.dy;
+            if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
+              AppState.imageUpdateStatus = LengthyProcess.ongoing;
+              cLayerBindings.draw_background(zoom, x.floor(), y.floor());
+            }
+          }
+        },
+        onPointerUp: (event) {
+          if (event.buttons == 1) {
+            leftClickDown = false;
+          }
         },
         behavior: HitTestBehavior.opaque,
         child: child,
@@ -64,8 +105,8 @@ class _SpaceState extends State<Space> {
         },
         onScaleUpdate: (details) {
           if (details.scale == 1) {
-            y += details.localFocalPoint.dy - dy;
             x += details.localFocalPoint.dx - dx;
+            y += details.localFocalPoint.dy - dy;
             dx = details.localFocalPoint.dx;
             dy = details.localFocalPoint.dy;
           } else if (details.pointerCount == 2) {
@@ -94,7 +135,15 @@ class _SpaceState extends State<Space> {
   void initState() {
     super.initState();
 
+    timer = Timer.periodic(const Duration(milliseconds: 100), (Timer t) {
+      if (AppState.player.alive) {
+        AppState.player.updatePositionAndSpeed(hoverPosition);
+        setState(() {});
+      }
+    });
+
     AppState.onNewImage.subscribe(invokeSetState);
+    AppState.player.onPlayerStatusChanged.subscribe(invokeSetState);
 
     cLayerBindings.draw_background(zoom, 0, 0);
   }
@@ -102,6 +151,7 @@ class _SpaceState extends State<Space> {
   @override
   void dispose() {
     AppState.onNewImage.unsubscribe(invokeSetState);
+    AppState.player.onPlayerStatusChanged.unsubscribe(invokeSetState);
 
     super.dispose();
   }
@@ -110,7 +160,7 @@ class _SpaceState extends State<Space> {
   Widget build(BuildContext context) {
     spaceSize = MediaQuery.of(context).size;
 
-    return platformListener(SpaceWidget());
+    return platformListener(SpaceWidget(), spaceSize);
   }
 }
 
@@ -140,6 +190,10 @@ class SpaceObject extends RenderBox {
     return constraints.constrain(maxSize);
   }
 
+  final Paint playerPaint = Paint()
+    ..color = Colors.red
+    ..style = PaintingStyle.fill;
+
   @override
   void paint(PaintingContext context, Offset offset) {
     context.canvas.save();
@@ -149,6 +203,10 @@ class SpaceObject extends RenderBox {
         rect: Rect.fromLTWH(0, 0, AppState.painting.width!, AppState.painting.height!),
         image: AppState.painting.image!,
       );
+
+      if (AppState.player.alive) {
+        context.canvas.drawCircle(AppState.player.position, 20, playerPaint);
+      }
     }
 
     context.canvas.restore();
