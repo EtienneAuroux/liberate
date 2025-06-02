@@ -200,6 +200,10 @@ class SpaceObject extends RenderBox {
     ..color = Colors.green
     ..style = PaintingStyle.fill;
 
+  final Paint enemyPaint = Paint()
+    ..color = Colors.grey
+    ..style = PaintingStyle.fill;
+
   @override
   void paint(PaintingContext context, Offset offset) {
     context.canvas.save();
@@ -214,6 +218,9 @@ class SpaceObject extends RenderBox {
         context.canvas.drawCircle(AppState.player.position, AppState.player.hitBoxRadius, playerPaint);
         for (Target target in AppState.targets) {
           context.canvas.drawCircle(target.position, target.hitBoxRadius, targetPaint);
+        }
+        for (Enemy enemy in AppState.enemies) {
+          context.canvas.drawCircle(enemy.position, enemy.hitBoxRadius, enemyPaint);
         }
       }
 

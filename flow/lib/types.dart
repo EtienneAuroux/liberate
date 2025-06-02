@@ -69,9 +69,27 @@ class Target extends GameObject {
   Target(super.position, super.hitBoxRadius, this.point);
 }
 
+class Enemy extends GameObject {
+  double angle;
+  double speed;
+
+  Enemy(super.position, super.hitBoxRadius, this.angle, this.speed);
+
+  void updatePosition() {
+    position = Offset(position.dx + cos(angle) * speed, position.dy + sin(angle) * speed);
+  }
+}
+
 enum LengthyProcess {
   unknown,
   ongoing,
   done,
   failed,
+}
+
+enum Edge {
+  left,
+  top,
+  right,
+  bottom,
 }
