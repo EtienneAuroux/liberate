@@ -1,4 +1,4 @@
-class Conversions {
+class Calculations {
   double dampenZoom(double scale, {int dampingFactor = 10}) {
     if (scale >= 1) {
       double increase = scale - 1;

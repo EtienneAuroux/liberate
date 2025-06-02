@@ -20,16 +20,9 @@ class FrameEvent extends EventArgs {
 }
 
 class Player {
-  Event onPlayerStatusChanged = Event();
-  bool _alive = false;
-  bool get alive => _alive;
-  set alive(bool status) {
-    _alive = status;
-    onPlayerStatusChanged.broadcast();
-    // TODO is this necessary?
-  }
+  bool alive = false;
+  int points = 0;
 
-  Offset bounds = Offset.zero;
   double hitBoxRadius = 20;
 
   Offset _position = Offset.zero;
@@ -40,6 +33,7 @@ class Player {
   void initializePosition(Offset pointerPosition) {
     if (position.dx == 0 && position.dy == 0) {
       _position = pointerPosition;
+      alive = true;
     }
   }
 
@@ -47,7 +41,7 @@ class Player {
     _angle = atan2((pointerPosition.dy - position.dy), (pointerPosition.dx - position.dx));
   }
 
-  void updatePositionAndSpeed(Offset pointerPosition) {
+  void updatePositionAndSpeed(Offset pointerPosition, Offset bounds) {
     _speed = 1 + sqrt(pow((position.dx - pointerPosition.dx).abs(), 2) + pow((position.dy - pointerPosition.dy).abs(), 2)) / (max(bounds.dx, bounds.dy) / 100);
     Offset newPosition = Offset(position.dx + cos(_angle) * _speed, position.dy + sin(_angle) * _speed);
     if ((newPosition - pointerPosition).distanceSquared < hitBoxRadius) {
@@ -60,6 +54,19 @@ class Player {
       _position = newPosition;
     }
   }
+}
+
+class GameObject {
+  Offset position;
+  double hitBoxRadius;
+
+  GameObject(this.position, this.hitBoxRadius);
+}
+
+class Target extends GameObject {
+  int point;
+
+  Target(super.position, super.hitBoxRadius, this.point);
 }
 
 enum LengthyProcess {

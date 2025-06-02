@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'dart:ui';
 
 import 'package:event/event.dart';
 import 'package:flow/bindings.dart';
@@ -15,7 +16,7 @@ import 'package:flow/types.dart';
 class AppState {
   static Painting painting = Painting();
 
-  static Conversions conversions = Conversions();
+  static Calculations conversions = Calculations();
 
   static Event onNewImage = Event();
 
@@ -58,4 +59,38 @@ class AppState {
   }
 
   static Player player = Player();
+  static List<Target> targets = List.filled(3, Target(Offset.zero, 0, 0));
+  static Offset bounds = Offset.zero;
+
+  static void initializeGameState(Offset pointerPosition, Offset bounds) {
+    player.initializePosition(pointerPosition);
+
+    for (int targetIndex = 0; targetIndex < targets.length; targetIndex++) {
+      targets[targetIndex] = _createTarget(player.position);
+    }
+  }
+
+  static void updateGameState() {
+    for (int targetIndex = 0; targetIndex < targets.length; targetIndex++) {
+      bool targetCollision = _checkForCollision(player, targets[targetIndex]);
+      if (targetCollision) {
+        player.points += targets[targetIndex].point;
+        targets[targetIndex] = _createTarget(player.position);
+      }
+    }
+  }
+
+  static bool _checkForCollision(Player player, GameObject object) {
+    return (player.position - object.position).distanceSquared <= pow(player.hitBoxRadius + object.hitBoxRadius, 2);
+  }
+
+  static Target _createTarget(Offset exclusionCenter) {
+    int point = Random().nextInt(5) + 1;
+    Offset position = exclusionCenter;
+    while ((position - exclusionCenter).distanceSquared < 1000) {
+      position = Offset(Random().nextDouble() * bounds.dx, Random().nextDouble() * bounds.dy);
+    }
+    double hitBoxRadius = 35 - point * 5;
+    return Target(position, hitBoxRadius, point);
+  }
 }

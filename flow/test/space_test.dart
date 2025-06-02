@@ -12,7 +12,7 @@ void main() {
   });
 
   group('Zoom dampening factor calculation', () {
-    Conversions conversions = Conversions();
+    Calculations conversions = Calculations();
     test.test('Edge case, scale = 0', () {
       double dampenedZoom = conversions.dampenZoom(0);
 

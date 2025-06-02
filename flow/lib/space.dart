@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:event/event.dart';
 import 'package:flow/app_state.dart';
 import 'package:flow/bindings.dart';
+import 'package:flow/design.dart';
 import 'package:flow/types.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -72,7 +73,7 @@ class _SpaceState extends State<Space> {
             dy = event.localPosition.dy;
           } else if (event.buttons == 2) {
             if (!AppState.player.alive) {
-              AppState.player.initializePosition(event.localPosition);
+              AppState.initializeGameState(event.localPosition, Offset(screenSize.width, screenSize.height));
               AppState.player.alive = true;
             }
           }
@@ -135,15 +136,15 @@ class _SpaceState extends State<Space> {
   void initState() {
     super.initState();
 
-    timer = Timer.periodic(const Duration(milliseconds: 100), (Timer t) {
+    timer = Timer.periodic(const Duration(milliseconds: 50), (Timer t) {
       if (AppState.player.alive) {
-        AppState.player.updatePositionAndSpeed(hoverPosition);
+        AppState.updateGameState();
+        AppState.player.updatePositionAndSpeed(hoverPosition, AppState.bounds);
         setState(() {});
       }
     });
 
     AppState.onNewImage.subscribe(invokeSetState);
-    AppState.player.onPlayerStatusChanged.subscribe(invokeSetState);
 
     cLayerBindings.draw_background(zoom, 0, 0);
   }
@@ -151,7 +152,6 @@ class _SpaceState extends State<Space> {
   @override
   void dispose() {
     AppState.onNewImage.unsubscribe(invokeSetState);
-    AppState.player.onPlayerStatusChanged.unsubscribe(invokeSetState);
 
     super.dispose();
   }
@@ -159,8 +159,9 @@ class _SpaceState extends State<Space> {
   @override
   Widget build(BuildContext context) {
     spaceSize = MediaQuery.of(context).size;
-    AppState.player.bounds = Offset(spaceSize.width, spaceSize.height);
+    AppState.bounds = Offset(spaceSize.width, spaceSize.height);
 
+    // ignore: prefer_const_constructors
     return platformListener(SpaceWidget(), spaceSize);
   }
 }
@@ -195,6 +196,10 @@ class SpaceObject extends RenderBox {
     ..color = Colors.red
     ..style = PaintingStyle.fill;
 
+  final Paint targetPaint = Paint()
+    ..color = Colors.green
+    ..style = PaintingStyle.fill;
+
   @override
   void paint(PaintingContext context, Offset offset) {
     context.canvas.save();
@@ -207,7 +212,22 @@ class SpaceObject extends RenderBox {
 
       if (AppState.player.alive) {
         context.canvas.drawCircle(AppState.player.position, AppState.player.hitBoxRadius, playerPaint);
+        for (Target target in AppState.targets) {
+          context.canvas.drawCircle(target.position, target.hitBoxRadius, targetPaint);
+        }
       }
+
+      TextSpan pointCounterSpan = TextSpan(
+        text: AppState.player.points.toString().padLeft(4, '0'),
+        style: Design.pointCounterStyle,
+      );
+      TextPainter pointCounterPainter = TextPainter(
+        text: pointCounterSpan,
+        textAlign: TextAlign.start,
+        textDirection: TextDirection.ltr,
+      );
+      pointCounterPainter.layout();
+      pointCounterPainter.paint(context.canvas, Offset(AppState.bounds.dx - 120, 20));
     }
 
     context.canvas.restore();
