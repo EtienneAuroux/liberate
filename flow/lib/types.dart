@@ -26,14 +26,16 @@ class Player {
   set alive(bool status) {
     _alive = status;
     onPlayerStatusChanged.broadcast();
+    // TODO is this necessary?
   }
+
+  Offset bounds = Offset.zero;
+  double hitBoxRadius = 20;
 
   Offset _position = Offset.zero;
   Offset get position => _position;
   double _angle = 0;
-  double get angle => _angle;
   double _speed = 0;
-  double get speed => _speed;
 
   void initializePosition(Offset pointerPosition) {
     if (position.dx == 0 && position.dy == 0) {
@@ -41,14 +43,19 @@ class Player {
     }
   }
 
-  void setSpeedAndAngle(Offset pointerPosition) {
-    _speed = sqrt(pow((position.dx - pointerPosition.dx).abs(), 2) + pow((position.dy - pointerPosition.dy).abs(), 2));
-    _angle = atan((pointerPosition.dy - position.dy) / (pointerPosition.dx - position.dx));
+  void setAngle(Offset pointerPosition) {
+    _angle = atan2((pointerPosition.dy - position.dy), (pointerPosition.dx - position.dx));
   }
 
   void updatePositionAndSpeed(Offset pointerPosition) {
-    _position = Offset(position.dx + cos(_angle), position.dy + sin(_angle));
-    setSpeedAndAngle(pointerPosition);
+    _speed = 1 + sqrt(pow((position.dx - pointerPosition.dx).abs(), 2) + pow((position.dy - pointerPosition.dy).abs(), 2)) / (max(bounds.dx, bounds.dy) / 100);
+    Offset newPosition = Offset(position.dx + cos(_angle) * _speed, position.dy + sin(_angle) * _speed);
+    if (newPosition.dx >= hitBoxRadius &&
+        newPosition.dx <= bounds.dx - hitBoxRadius &&
+        newPosition.dy >= hitBoxRadius &&
+        newPosition.dy <= bounds.dy - hitBoxRadius) {
+      _position = newPosition;
+    }
   }
 }
 

@@ -46,7 +46,7 @@ class _SpaceState extends State<Space> {
         onPointerHover: (event) {
           hoverPosition = event.localPosition;
           if (AppState.player.alive) {
-            AppState.player.setSpeedAndAngle(hoverPosition);
+            AppState.player.setAngle(hoverPosition);
           }
         },
         onPointerSignal: (event) {
@@ -159,6 +159,7 @@ class _SpaceState extends State<Space> {
   @override
   Widget build(BuildContext context) {
     spaceSize = MediaQuery.of(context).size;
+    AppState.player.bounds = Offset(spaceSize.width, spaceSize.height);
 
     return platformListener(SpaceWidget(), spaceSize);
   }
@@ -205,7 +206,7 @@ class SpaceObject extends RenderBox {
       );
 
       if (AppState.player.alive) {
-        context.canvas.drawCircle(AppState.player.position, 20, playerPaint);
+        context.canvas.drawCircle(AppState.player.position, AppState.player.hitBoxRadius, playerPaint);
       }
     }
 
