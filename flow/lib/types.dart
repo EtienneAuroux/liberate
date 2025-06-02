@@ -50,6 +50,9 @@ class Player {
   void updatePositionAndSpeed(Offset pointerPosition) {
     _speed = 1 + sqrt(pow((position.dx - pointerPosition.dx).abs(), 2) + pow((position.dy - pointerPosition.dy).abs(), 2)) / (max(bounds.dx, bounds.dy) / 100);
     Offset newPosition = Offset(position.dx + cos(_angle) * _speed, position.dy + sin(_angle) * _speed);
+    if ((newPosition - pointerPosition).distanceSquared < hitBoxRadius) {
+      return;
+    }
     if (newPosition.dx >= hitBoxRadius &&
         newPosition.dx <= bounds.dx - hitBoxRadius &&
         newPosition.dy >= hitBoxRadius &&
