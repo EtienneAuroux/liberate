@@ -139,7 +139,7 @@ class _SpaceState extends State<Space> {
     timer = Timer.periodic(const Duration(milliseconds: 50), (Timer t) {
       if (AppState.player.alive) {
         AppState.updateGameState();
-        AppState.player.updatePositionAndSpeed(hoverPosition, AppState.bounds);
+        AppState.player.updatePositionAndSpeed(hoverPosition, AppState.bounds, AppState.blocks);
         setState(() {});
       }
     });
@@ -204,6 +204,10 @@ class SpaceObject extends RenderBox {
     ..color = Colors.grey
     ..style = PaintingStyle.fill;
 
+  final Paint blockPaint = Paint()
+    ..color = Colors.blue
+    ..style = PaintingStyle.fill;
+
   @override
   void paint(PaintingContext context, Offset offset) {
     context.canvas.save();
@@ -221,6 +225,9 @@ class SpaceObject extends RenderBox {
         }
         for (Enemy enemy in AppState.enemies) {
           context.canvas.drawCircle(enemy.position, enemy.hitBoxRadius, enemyPaint);
+        }
+        for (Block block in AppState.blocks) {
+          context.canvas.drawRect(Rect.fromLTWH(block.position.dx, block.position.dy, block.width, block.height), blockPaint);
         }
       }
 

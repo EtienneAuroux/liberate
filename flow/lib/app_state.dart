@@ -61,7 +61,10 @@ class AppState {
   static Player player = Player();
   static List<Target> targets = List.filled(3, Target(Offset.zero, 0, 0));
   static List<Enemy> enemies = <Enemy>[];
+  static List<Block> blocks = <Block>[];
   static Offset bounds = Offset.zero;
+  static const int _enemiesThreshold = 5;
+  static const int _blocksThreshold = 20;
 
   static void initializeGameState(Offset pointerPosition, Offset bounds) {
     player.initializePosition(pointerPosition);
@@ -80,11 +83,20 @@ class AppState {
       }
     }
 
-    if (player.points >= 5) {
-      for (int enemyIndex = 0; enemyIndex < (player.points / 5).ceil(); enemyIndex++) {
+    if (player.points > _blocksThreshold + blocks.length * 10) {
+      blocks.add(_createBlock(player.position));
+    }
+
+    if (player.points > _enemiesThreshold) {
+      for (int enemyIndex = 0; enemyIndex < (player.points / _enemiesThreshold).ceil(); enemyIndex++) {
         if (enemyIndex == enemies.length) {
           enemies.add(_createEnemy(player.position));
         } else {
+          bool enemyCollision = _checkForCollision(player, enemies[enemyIndex]);
+          if (enemyCollision) {
+            _endGame();
+            return;
+          }
           enemies[enemyIndex].updatePosition();
         }
       }
@@ -97,11 +109,20 @@ class AppState {
     }
   }
 
-  static bool _checkForCollision(Player player, GameObject object) {
+  static void _endGame() {
+    player.death();
+    for (int targetIndex = 0; targetIndex < targets.length; targetIndex++) {
+      targets[targetIndex] = Target(Offset.zero, 0, 0);
+    }
+    enemies.clear();
+    blocks.clear();
+  }
+
+  static bool _checkForCollision(Player player, CircularObject object) {
     return (player.position - object.position).distanceSquared <= pow(player.hitBoxRadius + object.hitBoxRadius, 2);
   }
 
-  static bool _checkOutOfBounds(GameObject object) {
+  static bool _checkOutOfBounds(CircularObject object) {
     const double margin = 100;
     return object.position.dx + margin <= 0 ||
         object.position.dx - margin >= bounds.dx ||
@@ -119,7 +140,7 @@ class AppState {
     return Target(position, hitBoxRadius, point);
   }
 
-  static Enemy _createEnemy(Offset playerPosition) {
+  static Enemy _createEnemy(Offset aimedPosition) {
     const double hitBoxRadius = 15;
     Edge entryEdge = Edge.values[Random().nextInt(4)];
     Offset startPosition;
@@ -137,9 +158,21 @@ class AppState {
         startPosition = Offset(Random().nextDouble() * bounds.dx, bounds.dy + hitBoxRadius);
         break;
     }
-    double angle = atan2((playerPosition.dy - startPosition.dy), (playerPosition.dx - startPosition.dx));
+    double angle = atan2((aimedPosition.dy - startPosition.dy), (aimedPosition.dx - startPosition.dx));
     double speed = Random().nextDouble() * (10 + max(bounds.dx, bounds.dy) / 100);
 
     return Enemy(startPosition, hitBoxRadius, angle, speed);
+  }
+
+  static Block _createBlock(Offset exclusionCenter) {
+    double width = 50 + Random().nextDouble() * 150;
+    double height = 20 + Random().nextDouble() * (width - 20);
+
+    Offset position = exclusionCenter;
+    while ((position - exclusionCenter).distanceSquared < pow(width, 2)) {
+      position = Offset(Random().nextDouble() * (bounds.dx - width / 2), Random().nextDouble() * (bounds.dy - height / 2));
+    }
+
+    return Block(width, height, position);
   }
 }
