@@ -81,14 +81,17 @@ class AppState {
     }
 
     if (player.points >= 5) {
-      for (int enemyIndex = 0; enemyIndex < player.points / 5; enemyIndex++) {
+      for (int enemyIndex = 0; enemyIndex < (player.points / 5).ceil(); enemyIndex++) {
         if (enemyIndex == enemies.length) {
           enemies.add(_createEnemy(player.position));
         } else {
           enemies[enemyIndex].updatePosition();
-          if (_checkOutOfBounds(enemies[enemyIndex])) {
-            // enemies.removeAt(enemyIndex);
-          }
+        }
+      }
+
+      for (int enemyIndex = enemies.length; enemyIndex > 0; enemyIndex--) {
+        if (_checkOutOfBounds(enemies[enemyIndex - 1])) {
+          enemies.removeAt(enemyIndex - 1);
         }
       }
     }
@@ -99,10 +102,11 @@ class AppState {
   }
 
   static bool _checkOutOfBounds(GameObject object) {
-    return object.position.dx + object.hitBoxRadius <= 0 ||
-        object.position.dx - object.hitBoxRadius >= bounds.dx ||
-        object.position.dy + object.hitBoxRadius <= bounds.dy ||
-        object.position.dy - object.hitBoxRadius <= bounds.dy;
+    const double margin = 100;
+    return object.position.dx + margin <= 0 ||
+        object.position.dx - margin >= bounds.dx ||
+        object.position.dy + margin <= 0 ||
+        object.position.dy - margin >= bounds.dy;
   }
 
   static Target _createTarget(Offset exclusionCenter) {
@@ -121,16 +125,16 @@ class AppState {
     Offset startPosition;
     switch (entryEdge) {
       case Edge.left:
-        startPosition = Offset(hitBoxRadius, Random().nextDouble() * bounds.dy);
+        startPosition = Offset(-hitBoxRadius, Random().nextDouble() * bounds.dy);
         break;
       case Edge.top:
-        startPosition = Offset(Random().nextDouble() * bounds.dx, hitBoxRadius);
+        startPosition = Offset(Random().nextDouble() * bounds.dx, -hitBoxRadius);
         break;
       case Edge.right:
-        startPosition = Offset(bounds.dx - hitBoxRadius, Random().nextDouble() * bounds.dy);
+        startPosition = Offset(bounds.dx + hitBoxRadius, Random().nextDouble() * bounds.dy);
         break;
       case Edge.bottom:
-        startPosition = Offset(Random().nextDouble() * bounds.dx, bounds.dy - hitBoxRadius);
+        startPosition = Offset(Random().nextDouble() * bounds.dx, bounds.dy + hitBoxRadius);
         break;
     }
     double angle = atan2((playerPosition.dy - startPosition.dy), (playerPosition.dx - startPosition.dx));
