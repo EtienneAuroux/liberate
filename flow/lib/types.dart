@@ -100,11 +100,26 @@ class Enemy extends CircularObject {
 }
 
 class Block {
-  double width;
-  double height;
-  Offset position;
+  final double width;
+  final double height;
+  final Offset position;
 
   Block(this.width, this.height, this.position);
+}
+
+class Laser {
+  final Offset startPosition;
+  final Offset endPosition;
+  final double minThickness = 2;
+  final double maxThickness = 10;
+  double timeAlive = 0;
+  final double longevity = 5000;
+
+  Laser(this.startPosition, this.endPosition);
+
+  double get thickness => timeAlive <= longevity / 2
+      ? minThickness + (maxThickness - minThickness) * 2 * timeAlive / longevity
+      : maxThickness - (maxThickness - minThickness) * 2 * (timeAlive - longevity / 2) / longevity;
 }
 
 enum LengthyProcess {

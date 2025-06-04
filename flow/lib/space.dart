@@ -230,6 +230,16 @@ class SpaceObject extends RenderBox {
         for (Block block in AppState.blocks) {
           context.canvas.drawRect(Rect.fromLTWH(block.position.dx, block.position.dy, block.width, block.height), blockPaint);
         }
+        for (Laser laser in AppState.lasers) {
+          context.canvas.drawLine(
+            laser.startPosition,
+            laser.endPosition,
+            Paint()
+              ..color = Colors.purple
+              ..style = PaintingStyle.fill
+              ..strokeWidth = laser.thickness,
+          );
+        }
       }
 
       TextSpan pointCounterSpan = TextSpan(

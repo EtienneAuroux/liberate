@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:ffi';
 import 'dart:math';
 import 'dart:typed_data';
@@ -63,14 +64,20 @@ class AppState {
 
   /// The rate at which the game state is updated in [ms].
   static const int updateRate = 50;
-  static List<Target> targets = List.filled(3, Target(Offset.zero, 0, 0));
+  static List<Target> targets = List.filled(_maxTargets, Target(Offset.zero, 0, 0), growable: false);
   static List<Enemy> enemies = <Enemy>[];
   static List<Block> blocks = <Block>[];
+  static List<Laser> lasers = <Laser>[];
   static Offset bounds = Offset.zero;
   static const int _enemiesThreshold = 5;
   static const int _blocksThreshold = 30;
+  static const int _laserThreshold = 5;
+  static const int _maxTargets = 3;
   static const int _maxEnemies = 30;
   static const int _maxBlocks = 20;
+  static const int _maxLaser = 5;
+  static const int _blockStep = 10;
+  static const int _laserStep = 5;
 
   static void initializeGameState(Offset pointerPosition, Offset bounds) {
     player.initializePosition(pointerPosition);
@@ -93,8 +100,18 @@ class AppState {
       }
     }
 
-    if (player.points > _blocksThreshold + blocks.length * 10 && blocks.length < _maxBlocks) {
+    if (player.points > _blocksThreshold + blocks.length * _blockStep && blocks.length < _maxBlocks) {
       blocks.add(_createBlock(player.position));
+    }
+
+    for (int laserIndex = 0; laserIndex < lasers.length; laserIndex++) {
+      lasers[laserIndex].timeAlive += updateRate;
+    }
+    if (player.points > _laserThreshold + lasers.length * _laserStep && lasers.length < _maxLaser) {
+      lasers.add(_createLaser(player.position));
+    }
+    if (lasers.length == _maxLaser && lasers.first.timeAlive >= lasers.first.longevity) {
+      lasers.removeAt(0);
     }
 
     if (player.points > _enemiesThreshold) {
@@ -188,5 +205,20 @@ class AppState {
     } else {
       return Block(width, height, position);
     }
+  }
+
+  static Laser _createLaser(Offset exclusionCenter) {
+    // TODO HANDLE EXCLUSION ZONE
+    Edge entryEdge = [Edge.left, Edge.top][Random().nextInt(2)];
+    Offset startPosition, endPosition;
+    if (entryEdge == Edge.left) {
+      startPosition = Offset(0, Random().nextDouble() * bounds.dy);
+      endPosition = startPosition + Offset(bounds.dx, 0);
+    } else {
+      startPosition = Offset(Random().nextDouble() * bounds.dx, 0);
+      endPosition = startPosition + Offset(0, bounds.dy);
+    }
+
+    return Laser(startPosition, endPosition);
   }
 }
