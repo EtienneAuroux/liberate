@@ -48,4 +48,17 @@ class Calculations {
     }
     return Offset(dx, dy);
   }
+
+  static bool laserAndCircleIntersection(Laser laser, CircularObject circle) {
+    if (laser.startPosition.dx == laser.endPosition.dx) {
+      if ((laser.startPosition.dx - circle.position.dx).abs() <= laser.thickness / 2 + circle.hitBoxRadius) {
+        return true;
+      }
+    } else {
+      if ((laser.startPosition.dy - circle.position.dy).abs() <= laser.thickness / 2 + circle.hitBoxRadius) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

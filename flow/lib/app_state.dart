@@ -7,6 +7,7 @@ import 'dart:ui';
 
 import 'package:event/event.dart';
 import 'package:flow/bindings.dart';
+import 'package:flow/calculations.dart';
 
 import 'dart:developer' as dev;
 
@@ -104,6 +105,11 @@ class AppState {
     }
 
     for (int laserIndex = lasers.length; laserIndex > 0; laserIndex--) {
+      bool laserCollision = Calculations.laserAndCircleIntersection(lasers[laserIndex - 1], CircularObject(player.position, player.hitBoxRadius));
+      if (laserCollision) {
+        _endGame();
+        return;
+      }
       lasers[laserIndex - 1].timeAlive += updateRate;
       if (lasers[laserIndex - 1].timeAlive >= lasers[laserIndex - 1].longevity) {
         lasers.removeAt(laserIndex - 1);
