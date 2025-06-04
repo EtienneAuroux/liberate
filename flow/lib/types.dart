@@ -119,7 +119,7 @@ class Laser {
 
   double get thickness => timeAlive <= longevity / 2
       ? minThickness + (maxThickness - minThickness) * 2 * timeAlive / longevity
-      : maxThickness - (maxThickness - minThickness) * 2 * (timeAlive - longevity / 2) / longevity;
+      : maxThickness - maxThickness * 2 * (timeAlive - longevity / 2) / longevity;
 }
 
 enum LengthyProcess {

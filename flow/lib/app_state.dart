@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:ffi';
 import 'dart:math';
 import 'dart:typed_data';
@@ -71,13 +70,13 @@ class AppState {
   static Offset bounds = Offset.zero;
   static const int _enemiesThreshold = 5;
   static const int _blocksThreshold = 30;
-  static const int _laserThreshold = 5;
+  static const int _laserThreshold = 70;
   static const int _maxTargets = 3;
   static const int _maxEnemies = 30;
   static const int _maxBlocks = 20;
   static const int _maxLaser = 5;
   static const int _blockStep = 10;
-  static const int _laserStep = 5;
+  static const int _laserStep = 20;
 
   static void initializeGameState(Offset pointerPosition, Offset bounds) {
     player.initializePosition(pointerPosition);
@@ -104,14 +103,14 @@ class AppState {
       blocks.add(_createBlock(player.position));
     }
 
-    for (int laserIndex = 0; laserIndex < lasers.length; laserIndex++) {
-      lasers[laserIndex].timeAlive += updateRate;
+    for (int laserIndex = lasers.length; laserIndex > 0; laserIndex--) {
+      lasers[laserIndex - 1].timeAlive += updateRate;
+      if (lasers[laserIndex - 1].timeAlive >= lasers[laserIndex - 1].longevity) {
+        lasers.removeAt(laserIndex - 1);
+      }
     }
     if (player.points > _laserThreshold + lasers.length * _laserStep && lasers.length < _maxLaser) {
       lasers.add(_createLaser(player.position));
-    }
-    if (lasers.length == _maxLaser && lasers.first.timeAlive >= lasers.first.longevity) {
-      lasers.removeAt(0);
     }
 
     if (player.points > _enemiesThreshold) {
@@ -143,6 +142,7 @@ class AppState {
     }
     enemies.clear();
     blocks.clear();
+    lasers.clear();
   }
 
   static bool _checkForCollision(Player player, CircularObject object) {
@@ -208,14 +208,21 @@ class AppState {
   }
 
   static Laser _createLaser(Offset exclusionCenter) {
-    // TODO HANDLE EXCLUSION ZONE
     Edge entryEdge = [Edge.left, Edge.top][Random().nextInt(2)];
     Offset startPosition, endPosition;
     if (entryEdge == Edge.left) {
-      startPosition = Offset(0, Random().nextDouble() * bounds.dy);
+      double start = exclusionCenter.dy;
+      while ((start - exclusionCenter.dy).abs() < 150) {
+        start = Random().nextDouble() * bounds.dy;
+      }
+      startPosition = Offset(0, start);
       endPosition = startPosition + Offset(bounds.dx, 0);
     } else {
-      startPosition = Offset(Random().nextDouble() * bounds.dx, 0);
+      double start = exclusionCenter.dx;
+      while ((start - exclusionCenter.dx).abs() < 150) {
+        start = Random().nextDouble() * bounds.dx;
+      }
+      startPosition = Offset(start, 0);
       endPosition = startPosition + Offset(0, bounds.dy);
     }
 
