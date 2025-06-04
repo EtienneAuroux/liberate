@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:event/event.dart';
+import 'package:flow/calculations.dart';
 
 class Painting {
   double? width;
@@ -48,18 +49,12 @@ class Player {
     if ((newPosition - pointerPosition).distanceSquared < hitBoxRadius) {
       return;
     }
-    // TODO NEED TO ADD THE REMAINING DISTANCE TO BLOCK INSTEAD OF STOPPING.
+
+    Offset remainingDistance = Offset.zero;
     for (Block block in blocks) {
-      Offset centerToCenterDistance =
-          Offset((block.position.dx + block.width / 2 - newPosition.dx).abs(), (block.position.dy + block.height / 2 - newPosition.dy).abs());
-      if (centerToCenterDistance.dx > block.width / 2 + hitBoxRadius || centerToCenterDistance.dy > block.height / 2 + hitBoxRadius) {
-        continue;
-      }
-      if (centerToCenterDistance.dx <= block.width / 2 || centerToCenterDistance.dy <= block.height / 2) {
-        return;
-      }
-      double distanceToCornerSquared = pow(centerToCenterDistance.dx - block.width / 2, 2) + pow(centerToCenterDistance.dy - block.height / 2, 2) + 0.0;
-      if (distanceToCornerSquared <= pow(hitBoxRadius, 2)) {
+      if (Calculations.blockAndCircleIntersection(block, CircularObject(newPosition, hitBoxRadius))) {
+        remainingDistance = Calculations.circleToBlockVector(block, CircularObject(position, hitBoxRadius));
+        _position += remainingDistance;
         return;
       }
     }
@@ -88,6 +83,7 @@ class CircularObject {
 
 class Target extends CircularObject {
   int point;
+  int timeAlive = 0;
 
   Target(super.position, super.hitBoxRadius, this.point);
 }

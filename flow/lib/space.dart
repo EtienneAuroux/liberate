@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:event/event.dart';
 import 'package:flow/app_state.dart';
 import 'package:flow/bindings.dart';
+import 'package:flow/calculations.dart';
 import 'package:flow/design.dart';
 import 'package:flow/types.dart';
 import 'package:flutter/gestures.dart';
@@ -52,7 +53,7 @@ class _SpaceState extends State<Space> {
         },
         onPointerSignal: (event) {
           if (event is PointerScrollEvent) {
-            double dampenedZoom = AppState.conversions.dampenZoom(event.scrollDelta.dy > 0 ? 0.75 : 1.5);
+            double dampenedZoom = Calculations.dampenZoom(event.scrollDelta.dy > 0 ? 0.75 : 1.5);
             double newZoom = zoom * dampenedZoom;
             if (newZoom >= minZoom && newZoom <= maxZoom) {
               Offset offset = event.localPosition * (newZoom - zoom);
@@ -111,7 +112,7 @@ class _SpaceState extends State<Space> {
             dx = details.localFocalPoint.dx;
             dy = details.localFocalPoint.dy;
           } else if (details.pointerCount == 2) {
-            double newZoom = zoom * AppState.conversions.dampenZoom(details.scale);
+            double newZoom = zoom * Calculations.dampenZoom(details.scale);
             if (newZoom >= minZoom && newZoom <= maxZoom) {
               zoom = newZoom;
             }
@@ -136,7 +137,7 @@ class _SpaceState extends State<Space> {
   void initState() {
     super.initState();
 
-    timer = Timer.periodic(const Duration(milliseconds: 50), (Timer t) {
+    timer = Timer.periodic(const Duration(milliseconds: AppState.updateRate), (Timer t) {
       if (AppState.player.alive) {
         AppState.updateGameState();
         AppState.player.updatePositionAndSpeed(hoverPosition, AppState.bounds, AppState.blocks);

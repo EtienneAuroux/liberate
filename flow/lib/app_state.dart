@@ -7,16 +7,15 @@ import 'dart:ui';
 
 import 'package:event/event.dart';
 import 'package:flow/bindings.dart';
-import 'package:flow/conversions.dart';
 
 import 'dart:developer' as dev;
 
 import 'package:flow/types.dart';
 
 class AppState {
-  static Painting painting = Painting();
+  // SPACE RELATED OBJECTS //
 
-  static Calculations conversions = Calculations();
+  static Painting painting = Painting();
 
   static Event onNewImage = Event();
 
@@ -58,13 +57,20 @@ class AppState {
     imageUpdateStatus = LengthyProcess.done;
   }
 
+  // GAME RELATED OBJECT //
+
   static Player player = Player();
+
+  /// The rate at which the game state is updated in [ms].
+  static const int updateRate = 50;
   static List<Target> targets = List.filled(3, Target(Offset.zero, 0, 0));
   static List<Enemy> enemies = <Enemy>[];
   static List<Block> blocks = <Block>[];
   static Offset bounds = Offset.zero;
   static const int _enemiesThreshold = 5;
-  static const int _blocksThreshold = 20;
+  static const int _blocksThreshold = 30;
+  static const int _maxEnemies = 30;
+  static const int _maxBlocks = 20;
 
   static void initializeGameState(Offset pointerPosition, Offset bounds) {
     player.initializePosition(pointerPosition);
@@ -76,20 +82,24 @@ class AppState {
 
   static void updateGameState() {
     for (int targetIndex = 0; targetIndex < targets.length; targetIndex++) {
+      targets[targetIndex].timeAlive += updateRate;
       bool targetCollision = _checkForCollision(player, targets[targetIndex]);
       if (targetCollision) {
         player.points += targets[targetIndex].point;
         targets[targetIndex] = _createTarget(player.position);
       }
+      if (targets[targetIndex].timeAlive > 10000) {
+        targets[targetIndex] = _createTarget(player.position);
+      }
     }
 
-    if (player.points > _blocksThreshold + blocks.length * 10) {
+    if (player.points > _blocksThreshold + blocks.length * 10 && blocks.length < _maxBlocks) {
       blocks.add(_createBlock(player.position));
     }
 
     if (player.points > _enemiesThreshold) {
       for (int enemyIndex = 0; enemyIndex < (player.points / _enemiesThreshold).ceil(); enemyIndex++) {
-        if (enemyIndex == enemies.length) {
+        if (enemyIndex == enemies.length && enemies.length < _maxEnemies) {
           enemies.add(_createEnemy(player.position));
         } else {
           bool enemyCollision = _checkForCollision(player, enemies[enemyIndex]);
@@ -165,14 +175,18 @@ class AppState {
   }
 
   static Block _createBlock(Offset exclusionCenter) {
-    double width = 50 + Random().nextDouble() * 150;
-    double height = 20 + Random().nextDouble() * (width - 20);
+    double width = 10 + Random().nextDouble() * 10;
+    double height = 50 + Random().nextDouble() * 150;
 
     Offset position = exclusionCenter;
     while ((position - exclusionCenter).distanceSquared < pow(width, 2)) {
       position = Offset(Random().nextDouble() * (bounds.dx - width / 2), Random().nextDouble() * (bounds.dy - height / 2));
     }
 
-    return Block(width, height, position);
+    if (Random().nextBool()) {
+      return Block(height, width, position);
+    } else {
+      return Block(width, height, position);
+    }
   }
 }
