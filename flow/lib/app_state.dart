@@ -140,7 +140,7 @@ class AppState {
     }
 
     if (player.points > _enemiesThreshold) {
-      for (int enemyIndex = 0; enemyIndex < (player.points / _enemiesThreshold).ceil(); enemyIndex++) {
+      for (int enemyIndex = 0; enemyIndex < (player.points / _enemiesThreshold).ceil() - 1; enemyIndex++) {
         if (enemyIndex == enemies.length && enemies.length < _maxEnemies) {
           enemies.add(_createEnemy(player.position));
         } else {
@@ -161,20 +161,15 @@ class AppState {
     }
   }
 
+  /// Sync the background [shift] with enemies and laser shift when the user drags the screen.
   static void _shiftTheBoard(Offset shift) {
     for (int enemyIndex = 0; enemyIndex < enemies.length; enemyIndex++) {
       enemies[enemyIndex].shiftPosition(shift.dx, shift.dy);
     }
 
-    // for (int laserIndex = 0; laserIndex < lasers.length; laserIndex++) {
-    //   if (lasers[laserIndex].startPosition.dx == lasers[laserIndex].endPosition.dx) {
-    //     lasers[laserIndex].startPosition += Offset(xShift, 0);
-    //     lasers[laserIndex].endPosition += Offset(xShift, 0);
-    //   } else {
-    //     lasers[laserIndex].startPosition += Offset(0, yShift);
-    //     lasers[laserIndex].endPosition += Offset(0, yShift);
-    //   }
-    // }
+    for (int laserIndex = 0; laserIndex < lasers.length; laserIndex++) {
+      lasers[laserIndex].shiftPosition(shift.dx, shift.dy);
+    }
   }
 
   static void _endGame() {

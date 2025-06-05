@@ -101,8 +101,6 @@ class Enemy extends CircularObject {
   void shiftPosition(double xShift, double yShift) {
     Offset newPosition = Offset(position.dx + xShift, position.dy + yShift);
     position = newPosition;
-    double newAngle = atan2((newPosition.dy - position.dy), (newPosition.dx - position.dx));
-    // angle = pi;
   }
 }
 
@@ -127,6 +125,16 @@ class Laser {
   double get thickness => timeAlive <= longevity / 2
       ? minThickness + (maxThickness - minThickness) * 2 * timeAlive / longevity
       : maxThickness - maxThickness * 2 * (timeAlive - longevity / 2) / longevity;
+
+  void shiftPosition(double xShift, double yShift) {
+    if (startPosition.dx == endPosition.dx) {
+      startPosition += Offset(xShift, 0);
+      endPosition += Offset(xShift, 0);
+    } else {
+      startPosition += Offset(0, yShift);
+      endPosition += Offset(0, yShift);
+    }
+  }
 }
 
 enum LengthyProcess {
