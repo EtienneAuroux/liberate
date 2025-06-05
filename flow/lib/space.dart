@@ -7,7 +7,7 @@ import 'package:flow/bindings.dart';
 import 'package:flow/calculations.dart';
 import 'package:flow/design.dart';
 import 'package:flow/types.dart';
-import 'package:flutter/gestures.dart';
+// import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'dart:developer' as dev;
@@ -25,8 +25,6 @@ class _SpaceState extends State<Space> {
   final int margin = 100;
   final double minZoom = 0.1;
   final double maxZoom = 10;
-
-  bool leftClickDown = false;
 
   double x = 0, dx = 0, y = 0, dy = 0;
   double zoom = 1;
@@ -51,25 +49,25 @@ class _SpaceState extends State<Space> {
             AppState.player.setAngle(hoverPosition);
           }
         },
-        onPointerSignal: (event) {
-          if (event is PointerScrollEvent) {
-            double dampenedZoom = Calculations.dampenZoom(event.scrollDelta.dy > 0 ? 0.75 : 1.5);
-            double newZoom = zoom * dampenedZoom;
-            if (newZoom >= minZoom && newZoom <= maxZoom) {
-              Offset offset = event.localPosition * (newZoom - zoom);
-              zoom = newZoom;
-              x -= offset.dx;
-              y -= offset.dy;
-            }
-            if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
-              AppState.imageUpdateStatus = LengthyProcess.ongoing;
-              cLayerBindings.draw_background(zoom, x.floor(), y.floor());
-            }
-          }
-        },
+        // onPointerSignal: (event) {
+        //   if (event is PointerScrollEvent) {
+        //     double dampenedZoom = Calculations.dampenZoom(event.scrollDelta.dy > 0 ? 0.75 : 1.5);
+        //     double newZoom = zoom * dampenedZoom;
+        //     if (newZoom >= minZoom && newZoom <= maxZoom) {
+        //       Offset offset = event.localPosition * (newZoom - zoom);
+        //       zoom = newZoom;
+        //       x -= offset.dx;
+        //       y -= offset.dy;
+        //     }
+        //     if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
+        //       AppState.imageUpdateStatus = LengthyProcess.ongoing;
+        //       cLayerBindings.draw_background(zoom, x.floor(), y.floor());
+        //     }
+        //   }
+        // },
         onPointerDown: (event) {
           if (event.buttons == 1) {
-            leftClickDown = true;
+            AppState.boardShifting = true;
             dx = event.localPosition.dx;
             dy = event.localPosition.dy;
           } else if (event.buttons == 2) {
@@ -80,9 +78,10 @@ class _SpaceState extends State<Space> {
           }
         },
         onPointerMove: (event) {
-          if (event.buttons == 1 && leftClickDown) {
+          if (event.buttons == 1 && AppState.boardShifting) {
             x += event.localPosition.dx - dx;
             y += event.localPosition.dy - dy;
+            AppState.shift = Offset(event.localPosition.dx - dx, event.localPosition.dy - dy);
             dx = event.localPosition.dx;
             dy = event.localPosition.dy;
             if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
@@ -92,10 +91,11 @@ class _SpaceState extends State<Space> {
           }
         },
         onPointerUp: (event) {
-          if (event.buttons == 1) {
-            leftClickDown = false;
+          if (event.buttons == 0) {
+            AppState.boardShifting = false;
           }
         },
+
         behavior: HitTestBehavior.opaque,
         child: child,
       );
@@ -193,6 +193,10 @@ class SpaceObject extends RenderBox {
     return constraints.constrain(maxSize);
   }
 
+  final String gameStart = 'RIGHT CLICK';
+  final String gameOver = 'GAME OVER';
+  final String gameWon = 'CONGRATULATIONS!';
+
   final Paint playerPaint = Paint()
     ..color = Colors.red
     ..style = PaintingStyle.fill;
@@ -253,6 +257,30 @@ class SpaceObject extends RenderBox {
       );
       pointCounterPainter.layout();
       pointCounterPainter.paint(context.canvas, Offset(AppState.bounds.dx - 120, 20));
+
+      if (!AppState.player.alive) {
+        TextSpan announcementSpan;
+        if (AppState.gameTime == 0) {
+          announcementSpan = TextSpan(text: gameStart, style: Design.announcementStyle);
+        } else if (AppState.player.points < AppState.winningCondition) {
+          announcementSpan = TextSpan(text: gameOver, style: Design.announcementStyle);
+        } else {
+          announcementSpan = TextSpan(children: [
+            TextSpan(text: gameWon),
+            TextSpan(text: Calculations.millisecondsToTime(AppState.gameTime)),
+          ], style: Design.announcementStyle);
+        }
+        TextPainter announcementPainter = TextPainter(
+          text: announcementSpan,
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.ltr,
+        );
+        announcementPainter.layout();
+        announcementPainter.paint(
+          context.canvas,
+          Offset(size.width - announcementPainter.width, size.height - announcementPainter.height) * 0.5,
+        );
+      }
     }
 
     context.canvas.restore();

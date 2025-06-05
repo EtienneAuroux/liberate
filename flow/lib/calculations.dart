@@ -2,7 +2,6 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flow/types.dart';
-import 'dart:developer' as dev;
 
 class Calculations {
   static double dampenZoom(double scale, {int dampingFactor = 10}) {
@@ -60,5 +59,14 @@ class Calculations {
       }
     }
     return false;
+  }
+
+  static String millisecondsToTime(int milliseconds) {
+    int ms = milliseconds % 1000;
+    int seconds = milliseconds ~/ 1000;
+    int minutes = milliseconds ~/ (60 * 1000);
+    int hours = milliseconds ~/ (60 * 60 * 1000);
+
+    return '${'$hours'.padLeft(2, '0')}:${'$minutes'.padLeft(2, '0')}:${'$seconds'.padLeft(2, '0')}.$ms';
   }
 }

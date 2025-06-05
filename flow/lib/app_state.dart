@@ -15,7 +15,6 @@ import 'package:flow/types.dart';
 
 class AppState {
   // SPACE RELATED OBJECTS //
-
   static Painting painting = Painting();
 
   static Event onNewImage = Event();
@@ -58,12 +57,23 @@ class AppState {
     imageUpdateStatus = LengthyProcess.done;
   }
 
-  // GAME RELATED OBJECT //
-
+  // GAME RELATED OBJECTS //
+  /// The player defined by its position, direction, speed, radius and alive status.
   static Player player = Player();
 
   /// The rate at which the game state is updated in [ms].
   static const int updateRate = 50;
+
+  /// The time elapsed from the start to the end of the game in [ms]
+  static int gameTime = 0;
+
+  /// The minimum number of points required to win the game.
+  static const int winningCondition = 200;
+
+  /// A flag that is true when the user shifts the board and false otherwise.
+  static bool boardShifting = false;
+  static Offset shift = Offset.zero;
+
   static List<Target> targets = List.filled(_maxTargets, Target(Offset.zero, 0, 0), growable: false);
   static List<Enemy> enemies = <Enemy>[];
   static List<Block> blocks = <Block>[];
@@ -80,6 +90,8 @@ class AppState {
   static const int _laserStep = 20;
 
   static void initializeGameState(Offset pointerPosition, Offset bounds) {
+    gameTime = DateTime.now().millisecondsSinceEpoch;
+
     player.initializePosition(pointerPosition);
 
     for (int targetIndex = 0; targetIndex < targets.length; targetIndex++) {
@@ -88,6 +100,10 @@ class AppState {
   }
 
   static void updateGameState() {
+    if (player.points >= winningCondition) {
+      _endGame();
+    }
+
     for (int targetIndex = 0; targetIndex < targets.length; targetIndex++) {
       targets[targetIndex].timeAlive += updateRate;
       bool targetCollision = _checkForCollision(player, targets[targetIndex]);
@@ -102,6 +118,10 @@ class AppState {
 
     if (player.points > _blocksThreshold + blocks.length * _blockStep && blocks.length < _maxBlocks) {
       blocks.add(_createBlock(player.position));
+    }
+
+    if (boardShifting) {
+      _shiftTheBoard(shift);
     }
 
     for (int laserIndex = lasers.length; laserIndex > 0; laserIndex--) {
@@ -141,6 +161,22 @@ class AppState {
     }
   }
 
+  static void _shiftTheBoard(Offset shift) {
+    for (int enemyIndex = 0; enemyIndex < enemies.length; enemyIndex++) {
+      enemies[enemyIndex].shiftPosition(shift.dx, shift.dy);
+    }
+
+    // for (int laserIndex = 0; laserIndex < lasers.length; laserIndex++) {
+    //   if (lasers[laserIndex].startPosition.dx == lasers[laserIndex].endPosition.dx) {
+    //     lasers[laserIndex].startPosition += Offset(xShift, 0);
+    //     lasers[laserIndex].endPosition += Offset(xShift, 0);
+    //   } else {
+    //     lasers[laserIndex].startPosition += Offset(0, yShift);
+    //     lasers[laserIndex].endPosition += Offset(0, yShift);
+    //   }
+    // }
+  }
+
   static void _endGame() {
     player.death();
     for (int targetIndex = 0; targetIndex < targets.length; targetIndex++) {
@@ -149,6 +185,8 @@ class AppState {
     enemies.clear();
     blocks.clear();
     lasers.clear();
+
+    gameTime = DateTime.now().millisecondsSinceEpoch - gameTime;
   }
 
   static bool _checkForCollision(Player player, CircularObject object) {

@@ -97,6 +97,13 @@ class Enemy extends CircularObject {
   void updatePosition() {
     position = Offset(position.dx + cos(angle) * speed, position.dy + sin(angle) * speed);
   }
+
+  void shiftPosition(double xShift, double yShift) {
+    Offset newPosition = Offset(position.dx + xShift, position.dy + yShift);
+    position = newPosition;
+    double newAngle = atan2((newPosition.dy - position.dy), (newPosition.dx - position.dx));
+    // angle = pi;
+  }
 }
 
 class Block {
@@ -108,8 +115,8 @@ class Block {
 }
 
 class Laser {
-  final Offset startPosition;
-  final Offset endPosition;
+  Offset startPosition;
+  Offset endPosition;
   final double minThickness = 2;
   final double maxThickness = 10;
   double timeAlive = 0;
