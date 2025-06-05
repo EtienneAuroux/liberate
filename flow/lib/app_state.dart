@@ -73,6 +73,10 @@ class AppState {
   /// A flag that is true when the user shifts the board and false otherwise.
   static bool boardShifting = false;
   static Offset shift = Offset.zero;
+  static Offset shiftPointer = Offset.zero;
+  static const int shiftCooldown = 10000;
+  static const int shiftOnTime = 2000;
+  static int shiftTime = 0;
 
   static List<Target> targets = List.filled(_maxTargets, Target(Offset.zero, 0, 0), growable: false);
   static List<Enemy> enemies = <Enemy>[];
@@ -80,13 +84,14 @@ class AppState {
   static List<Laser> lasers = <Laser>[];
   static Offset bounds = Offset.zero;
   static const int _enemiesThreshold = 5;
-  static const int _blocksThreshold = 30;
+  static const int _blocksThreshold = 25;
+  static const int _bouncingBlocksInterval = 4;
   static const int _laserThreshold = 70;
   static const int _maxTargets = 3;
   static const int _maxEnemies = 30;
   static const int _maxBlocks = 20;
   static const int _maxLaser = 5;
-  static const int _blockStep = 10;
+  static const int _blockStep = 8;
   static const int _laserStep = 20;
 
   static void initializeGameState(Offset pointerPosition, Offset bounds) {
@@ -117,11 +122,20 @@ class AppState {
     }
 
     if (player.points > _blocksThreshold + blocks.length * _blockStep && blocks.length < _maxBlocks) {
-      blocks.add(_createBlock(player.position));
+      if ((blocks.length + 1) % _bouncingBlocksInterval == 0) {
+        blocks.add(_createBlock(player.position, true));
+      } else {
+        blocks.add(_createBlock(player.position, false));
+      }
     }
 
+    shiftTime += updateRate;
     if (boardShifting) {
-      _shiftTheBoard(shift);
+      _shiftTheBoard();
+      if (shiftTime >= shiftOnTime) {
+        boardShifting = false;
+        shiftTime = 0;
+      }
     }
 
     for (int laserIndex = lasers.length; laserIndex > 0; laserIndex--) {
@@ -150,6 +164,12 @@ class AppState {
             return;
           }
           enemies[enemyIndex].updatePosition();
+          for (int blockIndex = 0; blockIndex < blocks.length; blockIndex++) {
+            bool bouncingBlockCollision = Calculations.blockAndCircleIntersection(blocks[blockIndex], enemies[enemyIndex]);
+            if (bouncingBlockCollision && blocks[blockIndex] is BouncingBlock) {
+              enemies[enemyIndex].bounce((blocks[blockIndex] as BouncingBlock).chock);
+            }
+          }
         }
       }
 
@@ -161,10 +181,10 @@ class AppState {
     }
   }
 
-  /// Sync the background [shift] with enemies and laser shift when the user drags the screen.
-  static void _shiftTheBoard(Offset shift) {
+  /// Sync the background [shift] with [enemies]' and [lasers]' shift when the user drags the screen.
+  static void _shiftTheBoard() {
     for (int enemyIndex = 0; enemyIndex < enemies.length; enemyIndex++) {
-      enemies[enemyIndex].shiftPosition(shift.dx, shift.dy);
+      enemies[enemyIndex].shiftPosition(shift, shiftPointer);
     }
 
     for (int laserIndex = 0; laserIndex < lasers.length; laserIndex++) {
@@ -172,6 +192,11 @@ class AppState {
     }
   }
 
+  /// Ends the game by killing the [player] (alive = false),
+  ///
+  /// emptying [targets], [enemies], [blocks] and [lasers] and,
+  ///
+  /// calculating the [gameTime].
   static void _endGame() {
     player.death();
     for (int targetIndex = 0; targetIndex < targets.length; targetIndex++) {
@@ -184,10 +209,12 @@ class AppState {
     gameTime = DateTime.now().millisecondsSinceEpoch - gameTime;
   }
 
+  /// Returns true if the [player] has collided with the [object] and false otherwise.
   static bool _checkForCollision(Player player, CircularObject object) {
     return (player.position - object.position).distanceSquared <= pow(player.hitBoxRadius + object.hitBoxRadius, 2);
   }
 
+  /// Returns true if the [object] has left the screen and false otherwise.
   static bool _checkOutOfBounds(CircularObject object) {
     const double margin = 100;
     return object.position.dx + margin <= 0 ||
@@ -196,16 +223,25 @@ class AppState {
         object.position.dy - margin >= bounds.dy;
   }
 
+  /// Create a random [Target] some distance away from the [exclusionCenter] point.
+  ///
+  /// The [Target]'s size is inversely proportional to the number of points ([1;5]) it contains.
   static Target _createTarget(Offset exclusionCenter) {
     int point = Random().nextInt(5) + 1;
+    double hitBoxRadius = 35 - point * 5;
+
     Offset position = exclusionCenter;
     while ((position - exclusionCenter).distanceSquared < 1000) {
-      position = Offset(Random().nextDouble() * bounds.dx, Random().nextDouble() * bounds.dy);
+      position =
+          Offset(hitBoxRadius + Random().nextDouble() * (bounds.dx - hitBoxRadius * 2), hitBoxRadius + Random().nextDouble() * (bounds.dy - hitBoxRadius * 2));
     }
-    double hitBoxRadius = 35 - point * 5;
+
     return Target(position, hitBoxRadius, point);
   }
 
+  /// Returns a random [Enemy] that starts its course outside a ramdom edge of the screen.
+  ///
+  /// The direction of the [Enemy] is set toward the [aimedPosition].
   static Enemy _createEnemy(Offset aimedPosition) {
     const double hitBoxRadius = 15;
     Edge entryEdge = Edge.values[Random().nextInt(4)];
@@ -230,22 +266,26 @@ class AppState {
     return Enemy(startPosition, hitBoxRadius, angle, speed);
   }
 
-  static Block _createBlock(Offset exclusionCenter) {
+  /// Returns a random [Block] some distance away from the [exclusionCenter] point.
+  ///
+  /// If [bouncing] is true, returns a random [BouncingBlock] instead.
+  static Block _createBlock(Offset exclusionCenter, bool bouncing) {
     double width = 10 + Random().nextDouble() * 10;
     double height = 50 + Random().nextDouble() * 150;
 
     Offset position = exclusionCenter;
     while ((position - exclusionCenter).distanceSquared < pow(width, 2)) {
-      position = Offset(Random().nextDouble() * (bounds.dx - width / 2), Random().nextDouble() * (bounds.dy - height / 2));
+      position = Offset(Random().nextDouble() * (bounds.dx - width), Random().nextDouble() * (bounds.dy - height));
     }
 
     if (Random().nextBool()) {
-      return Block(height, width, position);
+      return bouncing ? BouncingBlock(height, width, position, Random().nextDouble() * 2) : Block(height, width, position);
     } else {
-      return Block(width, height, position);
+      return bouncing ? BouncingBlock(width, height, position, Random().nextDouble() * 2) : Block(width, height, position);
     }
   }
 
+  /// Returns a random [Laser] some distance away from the [exclusionCenter] point.
   static Laser _createLaser(Offset exclusionCenter) {
     Edge entryEdge = [Edge.left, Edge.top][Random().nextInt(2)];
     Offset startPosition, endPosition;

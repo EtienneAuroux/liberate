@@ -98,8 +98,14 @@ class Enemy extends CircularObject {
     position = Offset(position.dx + cos(angle) * speed, position.dy + sin(angle) * speed);
   }
 
-  void shiftPosition(double xShift, double yShift) {
-    Offset newPosition = Offset(position.dx + xShift, position.dy + yShift);
+  void bounce(double chock) {
+    angle += pi;
+  }
+
+  void shiftPosition(Offset shift, Offset pointerPosition) {
+    // TODO THIS SHOULD BE A TIME LIMITED POWER.
+    angle = atan2((pointerPosition.dy - position.dy), (pointerPosition.dx - position.dx));
+    Offset newPosition = position + shift;
     position = newPosition;
   }
 }
@@ -110,6 +116,15 @@ class Block {
   final Offset position;
 
   Block(this.width, this.height, this.position);
+}
+
+class BouncingBlock extends Block {
+  /// The multiplier applied to the bouncing object's speed, ]0;2].
+  final double chock;
+
+  BouncingBlock(super.width, super.height, super.position, this.chock)
+      : assert(chock > 0),
+        assert(chock <= 2);
 }
 
 class Laser {

@@ -9,6 +9,14 @@ class Design {
     decoration: TextDecoration.none,
   );
 
+  static const TextStyle shiftStyle = TextStyle(
+    fontFamily: 'Roboto',
+    fontSize: 40,
+    fontWeight: FontWeight.normal,
+    color: Colors.red,
+    decoration: TextDecoration.none,
+  );
+
   static const TextStyle announcementStyle = TextStyle(
     fontFamily: 'Roboto',
     fontSize: 80,

@@ -67,7 +67,10 @@ class _SpaceState extends State<Space> {
         // },
         onPointerDown: (event) {
           if (event.buttons == 1) {
-            AppState.boardShifting = true;
+            if (AppState.shiftTime >= AppState.shiftCooldown) {
+              AppState.boardShifting = true;
+              AppState.shiftTime = 0;
+            }
             dx = event.localPosition.dx;
             dy = event.localPosition.dy;
           } else if (event.buttons == 2) {
@@ -82,6 +85,7 @@ class _SpaceState extends State<Space> {
             x += event.localPosition.dx - dx;
             y += event.localPosition.dy - dy;
             AppState.shift = Offset(event.localPosition.dx - dx, event.localPosition.dy - dy);
+            AppState.shiftPointer = event.localPosition;
             dx = event.localPosition.dx;
             dy = event.localPosition.dy;
             if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
@@ -213,6 +217,10 @@ class SpaceObject extends RenderBox {
     ..color = Colors.blue
     ..style = PaintingStyle.fill;
 
+  final Paint bouncingBLockPaint = Paint()
+    ..color = Colors.orange
+    ..style = PaintingStyle.fill;
+
   @override
   void paint(PaintingContext context, Offset offset) {
     context.canvas.save();
@@ -232,8 +240,13 @@ class SpaceObject extends RenderBox {
           context.canvas.drawCircle(enemy.position, enemy.hitBoxRadius, enemyPaint);
         }
         for (Block block in AppState.blocks) {
-          context.canvas.drawRect(Rect.fromLTWH(block.position.dx, block.position.dy, block.width, block.height), blockPaint);
+          if (block is BouncingBlock) {
+            context.canvas.drawRect(Rect.fromLTWH(block.position.dx, block.position.dy, block.width, block.height), bouncingBLockPaint);
+          } else {
+            context.canvas.drawRect(Rect.fromLTWH(block.position.dx, block.position.dy, block.width, block.height), blockPaint);
+          }
         }
+
         for (Laser laser in AppState.lasers) {
           context.canvas.drawLine(
             laser.startPosition,
@@ -257,6 +270,22 @@ class SpaceObject extends RenderBox {
       );
       pointCounterPainter.layout();
       pointCounterPainter.paint(context.canvas, Offset(AppState.bounds.dx - 120, 20));
+
+      TextSpan shiftSpan = TextSpan(
+        text: AppState.boardShifting
+            ? 'POWER ON'
+            : AppState.shiftTime >= AppState.shiftCooldown
+                ? 'READY'
+                : '${10 - (AppState.shiftTime / 1000).floor()}',
+        style: Design.shiftStyle,
+      );
+      TextPainter shiftPainter = TextPainter(
+        text: shiftSpan,
+        textAlign: TextAlign.start,
+        textDirection: TextDirection.ltr,
+      );
+      shiftPainter.layout();
+      shiftPainter.paint(context.canvas, Offset(AppState.bounds.dx - 120, AppState.bounds.dy - 60));
 
       if (!AppState.player.alive) {
         TextSpan announcementSpan;
