@@ -52,7 +52,7 @@ class Player {
 
     Offset remainingDistance = Offset.zero;
     for (Block block in blocks) {
-      if (Calculations.blockAndCircleIntersection(block, CircularObject(newPosition, hitBoxRadius))) {
+      if (Calculations.blockAndCircleOverlap(block, CircularObject(newPosition, hitBoxRadius))) {
         remainingDistance = Calculations.circleToBlockVector(block, CircularObject(position, hitBoxRadius));
         _position += remainingDistance;
         return;
@@ -91,6 +91,9 @@ class Target extends CircularObject {
 class Enemy extends CircularObject {
   double angle;
   double speed;
+  bool hasBounced = false;
+  double timeSinceBounce = 0;
+  final double minTimeBetweenBounces = 250;
 
   Enemy(super.position, super.hitBoxRadius, this.angle, this.speed);
 
@@ -103,62 +106,108 @@ class Enemy extends CircularObject {
   }
 
   void shiftPosition(Offset shift, Offset pointerPosition) {
-    // TODO THIS SHOULD BE A TIME LIMITED POWER.
     angle = atan2((pointerPosition.dy - position.dy), (pointerPosition.dx - position.dx));
     Offset newPosition = position + shift;
     position = newPosition;
   }
 }
 
+/// A class representing a [Block] on the screen.
+///
+/// A [Block] is a rectangle characterized by its [width], [height] and the [position] of its top-left corner.
 class Block {
+  /// The width of the [Block].
   final double width;
+
+  /// The heigth of the [Block].
   final double height;
+
+  /// The position of the top-left corner of the [Block].
   final Offset position;
 
+  /// Public constructor of [Block].
+  ///
+  /// Requires two [double] for [width] and [height] and an [Offset] for the position of the top-left corner.
   Block(this.width, this.height, this.position);
 }
 
+/// A class representing a [BouncingBlock], i.e. a [Block] through which an [Enemy] cannot go but rather bounces onto.
 class BouncingBlock extends Block {
   /// The multiplier applied to the bouncing object's speed, ]0;2].
   final double chock;
 
+  /// Public constructor of [BouncingBlock].
+  ///
+  /// Requires two [double] for [width] and [height] and an [Offset] for the position of the top-left corner.
+  ///
+  /// Requires [chock] to be more than 0 and at most 2.
   BouncingBlock(super.width, super.height, super.position, this.chock)
       : assert(chock > 0),
         assert(chock <= 2);
 }
 
+/// A class representing a [Laser] going from one side of the screen to the opposite.
+///
+/// A [Laser] is a line that is either horizontal or vertical (no diagonal line) with a given thickness.
+///
+/// Each [Laser] has a lifetime during which its thickness grows to a maximum at the half-life point before reducing to 0 at which point the [Laser] disappears.
 class Laser {
+  /// The starting position of the [Laser] on one edge of the screen.
   Offset startPosition;
+
+  /// The ending position of the [Laser] opposite to [startPosition];
   Offset endPosition;
+
+  /// The thickness of the [Laser] upon appearing.
   final double minThickness = 2;
+
+  /// The maximum thickness of the [Laser] reached when [timeAlive] is half of [longevity].
   final double maxThickness = 10;
+
+  /// The time the [Laser] has lived on the screen in milliseconds.
   double timeAlive = 0;
+
+  /// The maximum time the [Laser] is allowed on the screen in milliseconds.
   final double longevity = 5000;
 
+  /// Public constructor of [Laser]. Requires two [Offset] to know where the [Laser] starts and ends.
   Laser(this.startPosition, this.endPosition);
 
+  /// The [thickness] of the [Laser]. It depends on how long the [Laser] has been alive on the screen.
   double get thickness => timeAlive <= longevity / 2
       ? minThickness + (maxThickness - minThickness) * 2 * timeAlive / longevity
       : maxThickness - maxThickness * 2 * (timeAlive - longevity / 2) / longevity;
 
+  /// Moves the [Laser] up or down for an horizontal [Laser] and left or right for a vertical [Laser].
+  ///
+  /// Directly affects the [startPosition] and [endPosition] used to draw the [Laser] on the canvas.
   void shiftPosition(double xShift, double yShift) {
     if (startPosition.dx == endPosition.dx) {
-      startPosition += Offset(xShift, 0);
-      endPosition += Offset(xShift, 0);
+      startPosition = Offset(xShift + startPosition.dx, startPosition.dy);
+      endPosition = Offset(xShift + endPosition.dx, endPosition.dy);
     } else {
-      startPosition += Offset(0, yShift);
-      endPosition += Offset(0, yShift);
+      startPosition = Offset(startPosition.dx, yShift + startPosition.dy);
+      endPosition = Offset(endPosition.dx, yShift + endPosition.dy);
     }
   }
 }
 
+/// An enum with the possible states of a time-consuming process.
 enum LengthyProcess {
+  /// The state of the process is unknown.
   unknown,
+
+  /// The process is ongoing.
   ongoing,
+
+  /// The process has completed.
   done,
+
+  /// The process has failed.
   failed,
 }
 
+/// An enum listing the edges of a [Block] when facing the screen.
 enum Edge {
   left,
   top,

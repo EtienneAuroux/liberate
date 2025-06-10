@@ -139,7 +139,7 @@ class AppState {
     }
 
     for (int laserIndex = lasers.length; laserIndex > 0; laserIndex--) {
-      bool laserCollision = Calculations.laserAndCircleIntersection(lasers[laserIndex - 1], CircularObject(player.position, player.hitBoxRadius));
+      bool laserCollision = Calculations.laserAndCircleOverlap(lasers[laserIndex - 1], CircularObject(player.position, player.hitBoxRadius));
       if (laserCollision) {
         _endGame();
         return;
@@ -163,13 +163,24 @@ class AppState {
             _endGame();
             return;
           }
-          enemies[enemyIndex].updatePosition();
-          for (int blockIndex = 0; blockIndex < blocks.length; blockIndex++) {
-            bool bouncingBlockCollision = Calculations.blockAndCircleIntersection(blocks[blockIndex], enemies[enemyIndex]);
-            if (bouncingBlockCollision && blocks[blockIndex] is BouncingBlock) {
-              enemies[enemyIndex].bounce((blocks[blockIndex] as BouncingBlock).chock);
+          if (enemies[enemyIndex].hasBounced) {
+            enemies[enemyIndex].timeSinceBounce += updateRate;
+          } else {
+            for (int blockIndex = 0; blockIndex < blocks.length; blockIndex++) {
+              if (blocks[blockIndex] is BouncingBlock) {
+                bool bouncingBlockCollision = Calculations.blockAndCircleOverlap(blocks[blockIndex], enemies[enemyIndex]);
+                if (bouncingBlockCollision) {
+                  enemies[enemyIndex].bounce((blocks[blockIndex] as BouncingBlock).chock);
+                  enemies[enemyIndex].hasBounced = true;
+                }
+              }
             }
           }
+          if (enemies[enemyIndex].hasBounced && enemies[enemyIndex].timeSinceBounce >= enemies[enemyIndex].minTimeBetweenBounces) {
+            enemies[enemyIndex].hasBounced = false;
+            enemies[enemyIndex].timeSinceBounce = 0;
+          }
+          enemies[enemyIndex].updatePosition();
         }
       }
 

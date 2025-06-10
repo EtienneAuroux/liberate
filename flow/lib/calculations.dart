@@ -3,20 +3,19 @@ import 'dart:ui';
 
 import 'package:flow/types.dart';
 
+/// A class with static methods with no side effects.
+///
+/// Contains the following methods:
+/// - [blockAndCircleOverlap]
+/// - [circleToBlockVector]
+/// - [laserAndCircleOverlap]
+/// - [millisecondsToTime]
 class Calculations {
-  static double dampenZoom(double scale, {int dampingFactor = 10}) {
-    if (scale >= 1) {
-      double increase = scale - 1;
-      return 1 + increase / dampingFactor;
-    } else if (scale > 0) {
-      double decrease = 1 - scale;
-      return 1 - decrease / dampingFactor;
-    } else {
-      return 1;
-    }
-  }
-
-  static bool blockAndCircleIntersection(Block block, CircularObject circle) {
+  /// Compares the position of a [Block] with that of a [CircularObject] and
+  /// determines if any part of the [Block] overlaps with any part of the [CircularObject].
+  ///
+  /// Returns true if there is an overlap, false otherwise.
+  static bool blockAndCircleOverlap(Block block, CircularObject circle) {
     double distanceX = (block.position.dx + block.width / 2 - circle.position.dx).abs();
     double distanceY = (block.position.dy + block.height / 2 - circle.position.dy).abs();
 
@@ -33,6 +32,9 @@ class Calculations {
     return false;
   }
 
+  /// Calculate the smallest distance between a [Block] and a [CircularObject].
+  ///
+  /// The distance is returned as an [Offset].
   static Offset circleToBlockVector(Block block, CircularObject circle) {
     double dx = 0, dy = 0;
     if (block.position.dx > circle.position.dx + circle.hitBoxRadius) {
@@ -48,7 +50,11 @@ class Calculations {
     return Offset(dx, dy);
   }
 
-  static bool laserAndCircleIntersection(Laser laser, CircularObject circle) {
+  /// Compares the position of a [Laser] with that of a [CircularObject] and
+  /// determines if any part of the [Laser] overlaps with any part of the [CircularObject].
+  ///
+  /// Returns true if there is an overlap, false otherwise.
+  static bool laserAndCircleOverlap(Laser laser, CircularObject circle) {
     if (laser.startPosition.dx == laser.endPosition.dx) {
       if ((laser.startPosition.dx - circle.position.dx).abs() <= laser.thickness / 2 + circle.hitBoxRadius) {
         return true;
@@ -61,6 +67,7 @@ class Calculations {
     return false;
   }
 
+  /// Converts [milliseconds] to a [String] with the hh:mm:ss.sss format.
   static String millisecondsToTime(int milliseconds) {
     int ms = milliseconds % 1000;
     int seconds = milliseconds ~/ 1000;

@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
+import 'dart:ui';
 
 import 'package:event/event.dart';
 import 'package:flow/app_state.dart';
 import 'package:flow/bindings.dart';
 import 'package:flow/calculations.dart';
+import 'package:flow/constants.dart';
 import 'package:flow/design.dart';
 import 'package:flow/types.dart';
-// import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'dart:developer' as dev;
@@ -49,22 +51,6 @@ class _SpaceState extends State<Space> {
             AppState.player.setAngle(hoverPosition);
           }
         },
-        // onPointerSignal: (event) {
-        //   if (event is PointerScrollEvent) {
-        //     double dampenedZoom = Calculations.dampenZoom(event.scrollDelta.dy > 0 ? 0.75 : 1.5);
-        //     double newZoom = zoom * dampenedZoom;
-        //     if (newZoom >= minZoom && newZoom <= maxZoom) {
-        //       Offset offset = event.localPosition * (newZoom - zoom);
-        //       zoom = newZoom;
-        //       x -= offset.dx;
-        //       y -= offset.dy;
-        //     }
-        //     if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
-        //       AppState.imageUpdateStatus = LengthyProcess.ongoing;
-        //       cLayerBindings.draw_background(zoom, x.floor(), y.floor());
-        //     }
-        //   }
-        // },
         onPointerDown: (event) {
           if (event.buttons == 1) {
             if (AppState.shiftTime >= AppState.shiftCooldown) {
@@ -99,7 +85,6 @@ class _SpaceState extends State<Space> {
             AppState.boardShifting = false;
           }
         },
-
         behavior: HitTestBehavior.opaque,
         child: child,
       );
@@ -115,11 +100,6 @@ class _SpaceState extends State<Space> {
             y += details.localFocalPoint.dy - dy;
             dx = details.localFocalPoint.dx;
             dy = details.localFocalPoint.dy;
-          } else if (details.pointerCount == 2) {
-            double newZoom = zoom * Calculations.dampenZoom(details.scale);
-            if (newZoom >= minZoom && newZoom <= maxZoom) {
-              zoom = newZoom;
-            }
           }
 
           if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
@@ -197,30 +177,6 @@ class SpaceObject extends RenderBox {
     return constraints.constrain(maxSize);
   }
 
-  final String gameStart = 'RIGHT CLICK';
-  final String gameOver = 'GAME OVER';
-  final String gameWon = 'CONGRATULATIONS!';
-
-  final Paint playerPaint = Paint()
-    ..color = Colors.red
-    ..style = PaintingStyle.fill;
-
-  final Paint targetPaint = Paint()
-    ..color = Colors.green
-    ..style = PaintingStyle.fill;
-
-  final Paint enemyPaint = Paint()
-    ..color = Colors.grey
-    ..style = PaintingStyle.fill;
-
-  final Paint blockPaint = Paint()
-    ..color = Colors.blue
-    ..style = PaintingStyle.fill;
-
-  final Paint bouncingBLockPaint = Paint()
-    ..color = Colors.orange
-    ..style = PaintingStyle.fill;
-
   @override
   void paint(PaintingContext context, Offset offset) {
     context.canvas.save();
@@ -232,18 +188,42 @@ class SpaceObject extends RenderBox {
       );
 
       if (AppState.player.alive) {
-        context.canvas.drawCircle(AppState.player.position, AppState.player.hitBoxRadius, playerPaint);
+        context.canvas.drawCircle(AppState.player.position, AppState.player.hitBoxRadius, Design.playerPaint);
         for (Target target in AppState.targets) {
-          context.canvas.drawCircle(target.position, target.hitBoxRadius, targetPaint);
+          context.canvas.drawCircle(target.position, target.hitBoxRadius, Design.targetPaint);
         }
         for (Enemy enemy in AppState.enemies) {
-          context.canvas.drawCircle(enemy.position, enemy.hitBoxRadius, enemyPaint);
+          context.canvas.drawCircle(enemy.position, enemy.hitBoxRadius, Design.enemyPaint);
+          context.canvas.drawVertices(
+            Vertices(
+              VertexMode.triangles,
+              [
+                enemy.position +
+                    Offset(
+                      enemy.hitBoxRadius * cos(enemy.angle),
+                      enemy.hitBoxRadius * sin(enemy.angle),
+                    ),
+                enemy.position +
+                    Offset(
+                      (enemy.hitBoxRadius * 0.9) * cos(enemy.angle + 15),
+                      (enemy.hitBoxRadius * 0.9) * sin(enemy.angle + 15),
+                    ),
+                enemy.position +
+                    Offset(
+                      (enemy.hitBoxRadius * 0.9) * cos(enemy.angle - 15),
+                      (enemy.hitBoxRadius * 0.9) * sin(enemy.angle - 15),
+                    ),
+              ],
+            ),
+            BlendMode.color,
+            Paint()..color = Colors.blueGrey,
+          );
         }
         for (Block block in AppState.blocks) {
           if (block is BouncingBlock) {
-            context.canvas.drawRect(Rect.fromLTWH(block.position.dx, block.position.dy, block.width, block.height), bouncingBLockPaint);
+            context.canvas.drawRect(Rect.fromLTWH(block.position.dx, block.position.dy, block.width, block.height), Design.bouncingBLockPaint);
           } else {
-            context.canvas.drawRect(Rect.fromLTWH(block.position.dx, block.position.dy, block.width, block.height), blockPaint);
+            context.canvas.drawRect(Rect.fromLTWH(block.position.dx, block.position.dy, block.width, block.height), Design.blockPaint);
           }
         }
 
@@ -269,33 +249,47 @@ class SpaceObject extends RenderBox {
         textDirection: TextDirection.ltr,
       );
       pointCounterPainter.layout();
-      pointCounterPainter.paint(context.canvas, Offset(AppState.bounds.dx - 120, 20));
+      pointCounterPainter.paint(
+        context.canvas,
+        Offset(
+          AppState.bounds.dx - pointCounterPainter.width - UIConstants.textHorizontalMargin,
+          UIConstants.textVerticalMargin,
+        ),
+      );
 
-      TextSpan shiftSpan = TextSpan(
-        text: AppState.boardShifting
-            ? 'POWER ON'
-            : AppState.shiftTime >= AppState.shiftCooldown
-                ? 'READY'
-                : '${10 - (AppState.shiftTime / 1000).floor()}',
-        style: Design.shiftStyle,
-      );
-      TextPainter shiftPainter = TextPainter(
-        text: shiftSpan,
-        textAlign: TextAlign.start,
-        textDirection: TextDirection.ltr,
-      );
-      shiftPainter.layout();
-      shiftPainter.paint(context.canvas, Offset(AppState.bounds.dx - 120, AppState.bounds.dy - 60));
+      if (AppState.player.alive) {
+        TextSpan shiftSpan = TextSpan(
+          text: AppState.boardShifting
+              ? 'POWER ON'
+              : AppState.shiftTime >= AppState.shiftCooldown
+                  ? 'READY'
+                  : 'POWER IN ${10 - (AppState.shiftTime / 1000).floor()}',
+          style: Design.shiftStyle,
+        );
+        TextPainter shiftPainter = TextPainter(
+          text: shiftSpan,
+          textAlign: TextAlign.start,
+          textDirection: TextDirection.ltr,
+        );
+        shiftPainter.layout();
+        shiftPainter.paint(
+          context.canvas,
+          Offset(
+            AppState.bounds.dx - UIConstants.textHorizontalMargin - shiftPainter.width,
+            AppState.bounds.dy - UIConstants.textVerticalMargin - shiftPainter.height,
+          ),
+        );
+      }
 
       if (!AppState.player.alive) {
         TextSpan announcementSpan;
         if (AppState.gameTime == 0) {
-          announcementSpan = TextSpan(text: gameStart, style: Design.announcementStyle);
+          announcementSpan = const TextSpan(text: UIConstants.gameStart, style: Design.announcementStyle);
         } else if (AppState.player.points < AppState.winningCondition) {
-          announcementSpan = TextSpan(text: gameOver, style: Design.announcementStyle);
+          announcementSpan = const TextSpan(text: UIConstants.gameOver, style: Design.announcementStyle);
         } else {
           announcementSpan = TextSpan(children: [
-            TextSpan(text: gameWon),
+            const TextSpan(text: UIConstants.gameWon),
             TextSpan(text: Calculations.millisecondsToTime(AppState.gameTime)),
           ], style: Design.announcementStyle);
         }
