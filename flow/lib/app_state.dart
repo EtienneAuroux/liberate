@@ -85,7 +85,7 @@ class AppState {
   static Offset bounds = Offset.zero;
   static const int _enemiesThreshold = 5;
   static const int _blocksThreshold = 25;
-  static const int _bouncingBlocksInterval = 4;
+  static const int _bouncingBlocksInterval = 3;
   static const int _laserThreshold = 70;
   static const int _maxTargets = 3;
   static const int _maxEnemies = 30;
@@ -116,7 +116,7 @@ class AppState {
         player.points += targets[targetIndex].point;
         targets[targetIndex] = _createTarget(player.position);
       }
-      if (targets[targetIndex].timeAlive > 10000) {
+      if (targets[targetIndex].timeAlive > targets[targetIndex].longevity) {
         targets[targetIndex] = _createTarget(player.position);
       }
     }
@@ -192,7 +192,7 @@ class AppState {
     }
   }
 
-  /// Sync the background [shift] with [enemies]' and [lasers]' shift when the user drags the screen.
+  /// Applies the background's [shift] resulting from the user dragging the screen to all [enemies] and [lasers].
   static void _shiftTheBoard() {
     for (int enemyIndex = 0; enemyIndex < enemies.length; enemyIndex++) {
       enemies[enemyIndex].shiftPosition(shift, shiftPointer);
@@ -222,16 +222,16 @@ class AppState {
 
   /// Returns true if the [player] has collided with the [object] and false otherwise.
   static bool _checkForCollision(Player player, CircularObject object) {
-    return (player.position - object.position).distanceSquared <= pow(player.hitBoxRadius + object.hitBoxRadius, 2);
+    return (player.position - object.centerPosition).distanceSquared <= pow(player.hitBoxRadius + object.hitBoxRadius, 2);
   }
 
   /// Returns true if the [object] has left the screen and false otherwise.
   static bool _checkOutOfBounds(CircularObject object) {
     const double margin = 100;
-    return object.position.dx + margin <= 0 ||
-        object.position.dx - margin >= bounds.dx ||
-        object.position.dy + margin <= 0 ||
-        object.position.dy - margin >= bounds.dy;
+    return object.centerPosition.dx + margin <= 0 ||
+        object.centerPosition.dx - margin >= bounds.dx ||
+        object.centerPosition.dy + margin <= 0 ||
+        object.centerPosition.dy - margin >= bounds.dy;
   }
 
   /// Create a random [Target] some distance away from the [exclusionCenter] point.

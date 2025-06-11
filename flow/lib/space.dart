@@ -190,25 +190,25 @@ class SpaceObject extends RenderBox {
       if (AppState.player.alive) {
         context.canvas.drawCircle(AppState.player.position, AppState.player.hitBoxRadius, Design.playerPaint);
         for (Target target in AppState.targets) {
-          context.canvas.drawCircle(target.position, target.hitBoxRadius, Design.targetPaint);
+          context.canvas.drawCircle(target.centerPosition, target.hitBoxRadius, Design.targetPaint);
         }
         for (Enemy enemy in AppState.enemies) {
-          context.canvas.drawCircle(enemy.position, enemy.hitBoxRadius, Design.enemyPaint);
+          context.canvas.drawCircle(enemy.centerPosition, enemy.hitBoxRadius, Design.enemyPaint);
           context.canvas.drawVertices(
             Vertices(
               VertexMode.triangles,
               [
-                enemy.position +
+                enemy.centerPosition +
                     Offset(
                       enemy.hitBoxRadius * cos(enemy.angle),
                       enemy.hitBoxRadius * sin(enemy.angle),
                     ),
-                enemy.position +
+                enemy.centerPosition +
                     Offset(
                       (enemy.hitBoxRadius * 0.9) * cos(enemy.angle + 15),
                       (enemy.hitBoxRadius * 0.9) * sin(enemy.angle + 15),
                     ),
-                enemy.position +
+                enemy.centerPosition +
                     Offset(
                       (enemy.hitBoxRadius * 0.9) * cos(enemy.angle - 15),
                       (enemy.hitBoxRadius * 0.9) * sin(enemy.angle - 15),

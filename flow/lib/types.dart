@@ -75,40 +75,70 @@ class Player {
 }
 
 class CircularObject {
-  Offset position;
+  Offset centerPosition;
   double hitBoxRadius;
 
-  CircularObject(this.position, this.hitBoxRadius);
+  CircularObject(this.centerPosition, this.hitBoxRadius);
 }
 
 class Target extends CircularObject {
   int point;
   int timeAlive = 0;
+  final int longevity = 10000;
 
-  Target(super.position, super.hitBoxRadius, this.point);
+  Target(super.centerPosition, super.hitBoxRadius, this.point);
 }
 
+/// A class representing an [Enemy] on the screen.
+///
+/// An [Enemy] is a [CircularObject] characterized by its [speed] and [angle].
+///
+/// The [angle] determines the direction of the [Enemy] with respect to the bottom-left corner of the 2D cartesian reference system represented by the screen.
+///
+/// An [Enemy] will go through normal [Block] but bounce off [BouncingBlock].
+///
+/// Once an [Enemy] has bounced off a [BouncingBlock] it will not be able to immediately bounce off another [BouncingBlock].
 class Enemy extends CircularObject {
+  /// The angle of the [Enemy] in radian.
   double angle;
+
+  /// The speed of the [Enemy] in pixel per updateRate.
   double speed;
+
+  /// A flag that is true if the [Enemy] has just bounced off a [BouncingBlock] and is false otherwise.
   bool hasBounced = false;
-  double timeSinceBounce = 0;
-  final double minTimeBetweenBounces = 250;
 
-  Enemy(super.position, super.hitBoxRadius, this.angle, this.speed);
+  /// The time elapsed since the [Enemy] has bounced off a [BouncingBlock] in milliseconds.
+  int timeSinceBounce = 0;
 
+  /// The time in milliseconds that must be awaited by the [Enemy] after bouncing off a [BouncingBlock] before it'd be allowed to bounce off an other one.
+  final int minTimeBetweenBounces = 250;
+
+  /// Public constructor of [Enemy].
+  ///
+  /// Requires an [Offset] and a [double] as the center position and radius of the [CircularObject], respectively.
+  ///
+  /// Requires two more [double] for the [angle] and [speed] of the [Enemy].
+  Enemy(super.centerPosition, super.hitBoxRadius, this.angle, this.speed);
+
+  /// Updates the [centerPosition] of the [Enemy] by [speed]*sqrt(2) in the direction determined by [angle].
   void updatePosition() {
-    position = Offset(position.dx + cos(angle) * speed, position.dy + sin(angle) * speed);
+    centerPosition = Offset(centerPosition.dx + cos(angle) * speed, centerPosition.dy + sin(angle) * speed);
   }
 
+  /// Adds [pi] to the [angle] of the [Enemy] to represent a bounce off a [BouncingBlock].
+  ///
+  /// Multiplies the speed of the [Enemy] by the encountered [BouncingBlock]'s [chock] value.
   void bounce(double chock) {
     angle += pi;
+    speed *= chock;
   }
 
+  /// Reorients the [Enemy] toward the [pointerPosition] and adds a [shift] to it.
   void shiftPosition(Offset shift, Offset pointerPosition) {
-    angle = atan2((pointerPosition.dy - position.dy), (pointerPosition.dx - position.dx));
-    Offset newPosition = position + shift;
-    position = newPosition;
+    angle = atan2((pointerPosition.dy - centerPosition.dy), (pointerPosition.dx - centerPosition.dx));
+    Offset newPosition = centerPosition + shift;
+    centerPosition = newPosition;
   }
 }
 
@@ -165,10 +195,10 @@ class Laser {
   final double maxThickness = 10;
 
   /// The time the [Laser] has lived on the screen in milliseconds.
-  double timeAlive = 0;
+  int timeAlive = 0;
 
   /// The maximum time the [Laser] is allowed on the screen in milliseconds.
-  final double longevity = 5000;
+  final int longevity = 5000;
 
   /// Public constructor of [Laser]. Requires two [Offset] to know where the [Laser] starts and ends.
   Laser(this.startPosition, this.endPosition);

@@ -16,8 +16,8 @@ class Calculations {
   ///
   /// Returns true if there is an overlap, false otherwise.
   static bool blockAndCircleOverlap(Block block, CircularObject circle) {
-    double distanceX = (block.position.dx + block.width / 2 - circle.position.dx).abs();
-    double distanceY = (block.position.dy + block.height / 2 - circle.position.dy).abs();
+    double distanceX = (block.position.dx + block.width / 2 - circle.centerPosition.dx).abs();
+    double distanceY = (block.position.dy + block.height / 2 - circle.centerPosition.dy).abs();
 
     if (distanceX > block.width / 2 + circle.hitBoxRadius || distanceY > block.height / 2 + circle.hitBoxRadius) {
       return false;
@@ -37,15 +37,15 @@ class Calculations {
   /// The distance is returned as an [Offset].
   static Offset circleToBlockVector(Block block, CircularObject circle) {
     double dx = 0, dy = 0;
-    if (block.position.dx > circle.position.dx + circle.hitBoxRadius) {
-      dx = block.position.dx - (circle.position.dx + circle.hitBoxRadius);
-    } else if (block.position.dx + block.width < circle.position.dx - circle.hitBoxRadius) {
-      dx = block.position.dx + block.width - (circle.position.dx - circle.hitBoxRadius);
+    if (block.position.dx > circle.centerPosition.dx + circle.hitBoxRadius) {
+      dx = block.position.dx - (circle.centerPosition.dx + circle.hitBoxRadius);
+    } else if (block.position.dx + block.width < circle.centerPosition.dx - circle.hitBoxRadius) {
+      dx = block.position.dx + block.width - (circle.centerPosition.dx - circle.hitBoxRadius);
     }
-    if (block.position.dy > circle.position.dy + circle.hitBoxRadius) {
-      dy = block.position.dy - (circle.position.dy + circle.hitBoxRadius);
-    } else if (block.position.dy + block.height < circle.position.dy - circle.hitBoxRadius) {
-      dy = block.position.dy + block.height - (circle.position.dy - circle.hitBoxRadius);
+    if (block.position.dy > circle.centerPosition.dy + circle.hitBoxRadius) {
+      dy = block.position.dy - (circle.centerPosition.dy + circle.hitBoxRadius);
+    } else if (block.position.dy + block.height < circle.centerPosition.dy - circle.hitBoxRadius) {
+      dy = block.position.dy + block.height - (circle.centerPosition.dy - circle.hitBoxRadius);
     }
     return Offset(dx, dy);
   }
@@ -56,11 +56,11 @@ class Calculations {
   /// Returns true if there is an overlap, false otherwise.
   static bool laserAndCircleOverlap(Laser laser, CircularObject circle) {
     if (laser.startPosition.dx == laser.endPosition.dx) {
-      if ((laser.startPosition.dx - circle.position.dx).abs() <= laser.thickness / 2 + circle.hitBoxRadius) {
+      if ((laser.startPosition.dx - circle.centerPosition.dx).abs() <= laser.thickness / 2 + circle.hitBoxRadius) {
         return true;
       }
     } else {
-      if ((laser.startPosition.dy - circle.position.dy).abs() <= laser.thickness / 2 + circle.hitBoxRadius) {
+      if ((laser.startPosition.dy - circle.centerPosition.dy).abs() <= laser.thickness / 2 + circle.hitBoxRadius) {
         return true;
       }
     }
