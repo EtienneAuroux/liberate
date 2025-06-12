@@ -188,7 +188,7 @@ class SpaceObject extends RenderBox {
       );
 
       if (AppState.player.alive) {
-        context.canvas.drawCircle(AppState.player.position, AppState.player.hitBoxRadius, Design.playerPaint);
+        context.canvas.drawCircle(AppState.player.centerPosition, AppState.player.hitBoxRadius, Design.playerPaint);
         for (Target target in AppState.targets) {
           context.canvas.drawCircle(target.centerPosition, target.hitBoxRadius, Design.targetPaint);
         }

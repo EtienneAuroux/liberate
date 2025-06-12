@@ -100,7 +100,7 @@ class AppState {
     player.initializePosition(pointerPosition);
 
     for (int targetIndex = 0; targetIndex < targets.length; targetIndex++) {
-      targets[targetIndex] = _createTarget(player.position);
+      targets[targetIndex] = _createTarget(player.centerPosition);
     }
   }
 
@@ -114,18 +114,18 @@ class AppState {
       bool targetCollision = _checkForCollision(player, targets[targetIndex]);
       if (targetCollision) {
         player.points += targets[targetIndex].point;
-        targets[targetIndex] = _createTarget(player.position);
+        targets[targetIndex] = _createTarget(player.centerPosition);
       }
       if (targets[targetIndex].timeAlive > targets[targetIndex].longevity) {
-        targets[targetIndex] = _createTarget(player.position);
+        targets[targetIndex] = _createTarget(player.centerPosition);
       }
     }
 
     if (player.points > _blocksThreshold + blocks.length * _blockStep && blocks.length < _maxBlocks) {
       if ((blocks.length + 1) % _bouncingBlocksInterval == 0) {
-        blocks.add(_createBlock(player.position, true));
+        blocks.add(_createBlock(player.centerPosition, true));
       } else {
-        blocks.add(_createBlock(player.position, false));
+        blocks.add(_createBlock(player.centerPosition, false));
       }
     }
 
@@ -139,7 +139,7 @@ class AppState {
     }
 
     for (int laserIndex = lasers.length; laserIndex > 0; laserIndex--) {
-      bool laserCollision = Calculations.laserAndCircleOverlap(lasers[laserIndex - 1], CircularObject(player.position, player.hitBoxRadius));
+      bool laserCollision = Calculations.laserAndCircleOverlap(lasers[laserIndex - 1], CircularObject(player.centerPosition, player.hitBoxRadius));
       if (laserCollision) {
         _endGame();
         return;
@@ -150,13 +150,13 @@ class AppState {
       }
     }
     if (player.points > _laserThreshold + lasers.length * _laserStep && lasers.length < _maxLaser) {
-      lasers.add(_createLaser(player.position));
+      lasers.add(_createLaser(player.centerPosition));
     }
 
     if (player.points > _enemiesThreshold) {
       for (int enemyIndex = 0; enemyIndex < (player.points / _enemiesThreshold).ceil() - 1; enemyIndex++) {
         if (enemyIndex == enemies.length && enemies.length < _maxEnemies) {
-          enemies.add(_createEnemy(player.position));
+          enemies.add(_createEnemy(player.centerPosition));
         } else {
           bool enemyCollision = _checkForCollision(player, enemies[enemyIndex]);
           if (enemyCollision) {
@@ -222,7 +222,7 @@ class AppState {
 
   /// Returns true if the [player] has collided with the [object] and false otherwise.
   static bool _checkForCollision(Player player, CircularObject object) {
-    return (player.position - object.centerPosition).distanceSquared <= pow(player.hitBoxRadius + object.hitBoxRadius, 2);
+    return (player.centerPosition - object.centerPosition).distanceSquared <= pow(player.hitBoxRadius + object.hitBoxRadius, 2);
   }
 
   /// Returns true if the [object] has left the screen and false otherwise.

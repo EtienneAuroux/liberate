@@ -5,47 +5,99 @@ import 'dart:ui';
 import 'package:event/event.dart';
 import 'package:flow/calculations.dart';
 
+/// A class representing a [Painting] to be displayed on the screen.
+///
+/// [Painting] is made to hold a [FrameEvent] and transforms its data into an [Image] usable by the dart side.
 class Painting {
+  /// The width of the [Painting] in pixel.
   double? width;
+
+  /// The height of the [Painting] in pixel.
   double? height;
+
+  /// The image of the [Painting].
   Image? image;
 }
 
+/// A class representing a [FrameEvent] sent from the c_layer to the dart side.
+///
+/// Each frame is an array of unsigned bytes called [data] of length [dataSize].
+///
+/// Each frame represents an image to be drawn on the screen and is therefore a screen of dimensions [width] and [height].
 class FrameEvent extends EventArgs {
+  /// The [width] of the image.
   final int width;
+
+  /// The [height] of the image.
   final int height;
+
+  /// The [length] of the [data] array.
   final int dataSize;
+
+  /// The actual pixel [data] arranged in the RGBA8888 order.
   final Pointer<Void> data;
 
+  /// Public constructor of [FrameEvent].
+  ///
+  /// Requires three [int] for the [width], [height] and [dataSize] as well as a [Pointer] to the [data] array.
   FrameEvent(this.width, this.height, this.data, this.dataSize);
 }
 
+/// A class representing the [Player], i.e. the user.
+///
+/// A [Player], if [alive], will aim to increase its number of [points] by moving its [centerPosition] on the screen to capture [Target].
 class Player {
+  /// A flag that is true if the [Player] is alive and false otherwise.
   bool alive = false;
+
+  /// The number of points that the [Player] has accumulated.
   int points = 0;
 
-  double hitBoxRadius = 20;
+  /// The radius of the [Player].
+  final double hitBoxRadius = 20;
 
-  Offset _position = Offset.zero;
-  Offset get position => _position;
+  /// The position of the center of the [Player] on the screen.
+  Offset _centerPosition = Offset.zero;
+
+  /// The position of the center of the [Player] on the screen.
+  Offset get centerPosition => _centerPosition;
+
+  /// The angle of the [Player] in radians.
+  ///
+  /// The angle determines the direction of the [Player] with respect to the bottom-left corner of the 2D cartesian reference system represented by the screen.
   double _angle = 0;
+
+  /// The speed of the [Player] in pixel per time unit.
   double _speed = 0;
 
+  /// Sets the [centerPosition] of the [Player] to be equal to [pointerPosition].
+  ///
+  /// This should only be called if the [Player] is not [alive].
+  ///
+  /// Side-effects: sets [points] to 0 and [alive] to true.
   void initializePosition(Offset pointerPosition) {
-    if (position.dx == 0 && position.dy == 0) {
-      _position = pointerPosition;
+    if (centerPosition.dx == 0 && centerPosition.dy == 0) {
+      _centerPosition = pointerPosition;
       points = 0;
       alive = true;
     }
   }
 
+  /// Sets the [_angle] of the [Player] so that it moves toward the [pointerPosition].
   void setAngle(Offset pointerPosition) {
-    _angle = atan2((pointerPosition.dy - position.dy), (pointerPosition.dx - position.dx));
+    _angle = atan2((pointerPosition.dy - centerPosition.dy), (pointerPosition.dx - centerPosition.dx));
   }
 
+  /// Updates the [_centerPosition] and [_speed] of the [Player] based on the user's [pointerPosition].
+  ///
+  /// The [Player] moves towards the [pointerPosition] at a speed that scales with the distance between the two.
+  ///
+  /// The [Player] movements are stopped if it meets the screen's bounds or a [Block].
   void updatePositionAndSpeed(Offset pointerPosition, Offset bounds, List<Block> blocks) {
-    _speed = 1 + sqrt(pow((position.dx - pointerPosition.dx).abs(), 2) + pow((position.dy - pointerPosition.dy).abs(), 2)) / (max(bounds.dx, bounds.dy) / 100);
-    Offset newPosition = Offset(position.dx + cos(_angle) * _speed, position.dy + sin(_angle) * _speed);
+    _speed = 1 +
+        sqrt(pow((centerPosition.dx - pointerPosition.dx).abs(), 2) + pow((centerPosition.dy - pointerPosition.dy).abs(), 2)) /
+            (max(bounds.dx, bounds.dy) / 100);
+    Offset newPosition = Offset(centerPosition.dx + cos(_angle) * _speed, centerPosition.dy + sin(_angle) * _speed);
     if ((newPosition - pointerPosition).distanceSquared < hitBoxRadius) {
       return;
     }
@@ -53,8 +105,8 @@ class Player {
     Offset remainingDistance = Offset.zero;
     for (Block block in blocks) {
       if (Calculations.blockAndCircleOverlap(block, CircularObject(newPosition, hitBoxRadius))) {
-        remainingDistance = Calculations.circleToBlockVector(block, CircularObject(position, hitBoxRadius));
-        _position += remainingDistance;
+        remainingDistance = Calculations.circleToBlockVector(block, CircularObject(centerPosition, hitBoxRadius));
+        _centerPosition += remainingDistance;
         return;
       }
     }
@@ -62,30 +114,53 @@ class Player {
         newPosition.dx <= bounds.dx - hitBoxRadius &&
         newPosition.dy >= hitBoxRadius &&
         newPosition.dy <= bounds.dy - hitBoxRadius) {
-      _position = newPosition;
+      _centerPosition = newPosition;
     }
   }
 
+  /// Kills the [Player] by setting [alive] to false, its [_centerPosition] to the top-left corner, its [_angle] to 0 and its [_speed] to 0.
   void death() {
     alive = false;
-    _position = Offset.zero;
+    _centerPosition = Offset.zero;
     _angle = 0;
     _speed = 0;
   }
 }
 
+/// A class representing a [CircularObject].
+///
+/// A [CircularObject] is a circle characterized by its [centerPosition] and [hitBoxRadius].
 class CircularObject {
+  /// The position of the center of the [CircularObject].
   Offset centerPosition;
+
+  /// The radius of the [CircularObject].
   double hitBoxRadius;
 
+  /// Public constructor of [CircularObject].
+  ///
+  /// Requires an [Offset] and a [double] for the center position and radius of the [CircularObject], respectively.
   CircularObject(this.centerPosition, this.hitBoxRadius);
 }
 
+/// A class representing a [Target] on the screen.
+///
+/// A [Target] is a [CircularObject] characterized by the number of [point] it has.
 class Target extends CircularObject {
+  /// The number of point the [Target] is worth.
   int point;
+
+  /// The time the [Target] has been present on the screen since appearing in milliseconds.
   int timeAlive = 0;
+
+  /// The maximum time the [Target] will remain on the screen in milliseconds.
   final int longevity = 10000;
 
+  /// Public constructor of [Target].
+  ///
+  /// Requires an [Offset] and a [double] as the center position and radius of the [CircularObject], respectively.
+  ///
+  /// Requires an [int] for the [point] of the [Target].
   Target(super.centerPosition, super.hitBoxRadius, this.point);
 }
 
@@ -102,7 +177,7 @@ class Enemy extends CircularObject {
   /// The angle of the [Enemy] in radian.
   double angle;
 
-  /// The speed of the [Enemy] in pixel per updateRate.
+  /// The speed of the [Enemy] in pixel per time unit.
   double speed;
 
   /// A flag that is true if the [Enemy] has just bounced off a [BouncingBlock] and is false otherwise.
