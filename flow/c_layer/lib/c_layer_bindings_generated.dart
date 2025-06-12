@@ -49,14 +49,12 @@ class CLayerBindings {
   void update_background_size(
     int width,
     int height,
-    double zoom,
     int x_offset,
     int y_offset,
   ) {
     return _update_background_size(
       width,
       height,
-      zoom,
       x_offset,
       y_offset,
     );
@@ -64,18 +62,18 @@ class CLayerBindings {
 
   late final _update_background_sizePtr = _lookup<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Uint64, ffi.Uint64, ffi.Double, ffi.Int64,
+          ffi.Void Function(ffi.Uint64, ffi.Uint64, ffi.Int64,
               ffi.Int64)>>('update_background_size');
   late final _update_background_size = _update_background_sizePtr
-      .asFunction<void Function(int, int, double, int, int)>();
+      .asFunction<void Function(int, int, int, int)>();
 
   void draw_background(
-    double zoom,
+    int cycle_time,
     int x_offset,
     int y_offset,
   ) {
     return _draw_background(
-      zoom,
+      cycle_time,
       x_offset,
       y_offset,
     );
@@ -83,10 +81,10 @@ class CLayerBindings {
 
   late final _draw_backgroundPtr = _lookup<
           ffi
-          .NativeFunction<ffi.Void Function(ffi.Double, ffi.Int64, ffi.Int64)>>(
+          .NativeFunction<ffi.Void Function(ffi.Uint64, ffi.Int64, ffi.Int64)>>(
       'draw_background');
   late final _draw_background =
-      _draw_backgroundPtr.asFunction<void Function(double, int, int)>();
+      _draw_backgroundPtr.asFunction<void Function(int, int, int)>();
 
   void image_thread_entry_point(
     ffi.Pointer<image_settings> settings,
@@ -102,6 +100,34 @@ class CLayerBindings {
   late final _image_thread_entry_point = _image_thread_entry_pointPtr
       .asFunction<void Function(ffi.Pointer<image_settings>)>();
 
+  void grid_configuration(
+    ffi.Pointer<image_settings> settings,
+  ) {
+    return _grid_configuration(
+      settings,
+    );
+  }
+
+  late final _grid_configurationPtr = _lookup<
+          ffi.NativeFunction<ffi.Void Function(ffi.Pointer<image_settings>)>>(
+      'grid_configuration');
+  late final _grid_configuration = _grid_configurationPtr
+      .asFunction<void Function(ffi.Pointer<image_settings>)>();
+
+  void wave_configuration(
+    ffi.Pointer<image_settings> settings,
+  ) {
+    return _wave_configuration(
+      settings,
+    );
+  }
+
+  late final _wave_configurationPtr = _lookup<
+          ffi.NativeFunction<ffi.Void Function(ffi.Pointer<image_settings>)>>(
+      'wave_configuration');
+  late final _wave_configuration = _wave_configurationPtr
+      .asFunction<void Function(ffi.Pointer<image_settings>)>();
+
   int round_double_to_int(
     double x,
   ) {
@@ -115,6 +141,11 @@ class CLayerBindings {
           'round_double_to_int');
   late final _round_double_to_int =
       _round_double_to_intPtr.asFunction<int Function(double)>();
+}
+
+abstract class configuration {
+  static const int grid = 0;
+  static const int wave = 1;
 }
 
 final class rgba extends ffi.Struct {
@@ -140,8 +171,11 @@ final class colors extends ffi.Struct {
 }
 
 final class image_settings extends ffi.Struct {
-  @ffi.Double()
-  external double zoom;
+  @ffi.Int32()
+  external int config;
+
+  @ffi.Uint64()
+  external int cycle_time;
 
   @ffi.Uint64()
   external int x_offset;

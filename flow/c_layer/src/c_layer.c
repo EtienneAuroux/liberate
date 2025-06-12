@@ -20,18 +20,19 @@ FLOW_API void initialize(frame_callback frame_callback, uint64_t width, uint64_t
   context.background.pixels = malloc(context.background.height * context.background.width * sizeof(struct rgba));
 }
 
-FLOW_API void update_background_size(uint64_t width, uint64_t height, double zoom, int64_t x_offset, int64_t y_offset)
+FLOW_API void update_background_size(uint64_t width, uint64_t height, uint64_t cycle_time, int64_t x_offset, int64_t y_offset)
 {
   context.background.width = width;
   context.background.height = height;
-  draw_background(zoom, x_offset, y_offset);
+  draw_background(cycle_time, x_offset, y_offset);
 }
 
-FLOW_API void draw_background(double zoom, int64_t x_offset, int64_t y_offset)
+FLOW_API void draw_background(uint64_t cycle_time, int64_t x_offset, int64_t y_offset)
 {
   for (int i = 0; i < context.num_image_threads; i++)
   {
-    context.image_threads[i].settings.zoom = zoom;
+    context.image_threads[i].settings.config = wave;
+    context.image_threads[i].settings.cycle_time = cycle_time;
     context.image_threads[i].settings.x_offset = x_offset;
     context.image_threads[i].settings.y_offset = y_offset;
     context.image_threads[i].settings.start_row = i * context.background.height / context.num_image_threads;
@@ -48,22 +49,32 @@ FLOW_API void draw_background(double zoom, int64_t x_offset, int64_t y_offset)
   context.frame_callback(context.background.width, context.background.height, context.background.width * context.background.height * sizeof(struct rgba), context.background.pixels);
 }
 
-FLOW_API void image_thread_entry_point(struct image_settings *settings)
+void image_thread_entry_point(struct image_settings *settings)
 {
-  int square = round_double_to_int(square_size * settings->zoom);
-  int square_dash_size = square / 3;
-  int total_x_offset = settings->x_offset + square / 2;
-  int total_y_offset = settings->y_offset + square / 2;
+  configuration config = settings->config;
+  switch (config) 
+  {
+    case grid: grid_configuration(settings); break;
+    case wave: wave_configuration(settings); break;
+    default: break;
+  }
+}
+
+void grid_configuration(struct image_settings *settings)
+{
+  int square_dash_size = square_size / 3;
+  int total_x_offset = settings->x_offset + square_size / 2;
+  int total_y_offset = settings->y_offset + square_size / 2;
 
   for (int y = settings->start_row; y < settings->end_row; y++) 
   {
     int true_y = abs(y - total_y_offset) ; 
-    bool horizontal_line = true_y % square >= 0 && true_y % square < square_stroke_thickness;
+    bool horizontal_line = true_y % square_size >= 0 && true_y % square_size < square_stroke_thickness;
     bool vertical_space = (true_y + square_dash_size / 4) % square_dash_size >= 0 && (true_y + square_dash_size / 4) % square_dash_size < square_dash_size / 2;
     for (int x = 0; x < context.background.width; x++)
     {
       int true_x = abs(x - total_x_offset) ;
-      bool vertical_line = true_x % square >= 0 && true_x % square < square_stroke_thickness;
+      bool vertical_line = true_x % square_size >= 0 && true_x % square_size < square_stroke_thickness;
       bool horizontal_space = (true_x + square_dash_size / 4) % square_dash_size >= 0 && (true_x + square_dash_size / 4) % square_dash_size < square_dash_size / 2;
       if ((horizontal_line && horizontal_space) || (vertical_line && vertical_space))
       {
@@ -77,7 +88,26 @@ FLOW_API void image_thread_entry_point(struct image_settings *settings)
   }
 }
 
-FLOW_API int round_double_to_int(double x)
+void wave_configuration(struct image_settings *settings)
+{
+  for (int y = settings->start_row; y < settings->end_row; y++)
+  {
+    for (int x = 0; x < context.background.width; x++)
+    {
+      double wave_x = settings->cycle_time + 20 * sin(y * 0.01);
+      if (x >= wave_x - 2 && x <= wave_x + 2) 
+      {
+        context.background.pixels[y * context.background.width + x] = context.colors.line_color;
+      } 
+      else
+      {
+        context.background.pixels[y * context.background.width + x] = context.colors.background_color;
+      }
+    }
+  }
+}
+
+int round_double_to_int(double x)
 {
   return (int)(x + 0.5 - (x<0));
 }

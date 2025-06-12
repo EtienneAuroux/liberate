@@ -7,7 +7,7 @@ import 'package:event/event.dart';
 import 'package:flow/app_state.dart';
 import 'package:flow/bindings.dart';
 import 'package:flow/calculations.dart';
-import 'package:flow/constants.dart';
+import 'package:flow/ui_constants.dart';
 import 'package:flow/design.dart';
 import 'package:flow/types.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +29,6 @@ class _SpaceState extends State<Space> {
   final double maxZoom = 10;
 
   double x = 0, dx = 0, y = 0, dy = 0;
-  double zoom = 1;
   Offset hoverPosition = Offset.zero;
 
   Size _spaceSize = Size.zero;
@@ -38,7 +37,7 @@ class _SpaceState extends State<Space> {
     if (AppState.imageUpdateStatus != LengthyProcess.ongoing && (size.width != _spaceSize.width || size.height != _spaceSize.height)) {
       _spaceSize = size;
       AppState.imageUpdateStatus = LengthyProcess.ongoing;
-      cLayerBindings.update_background_size(size.width.ceil() + margin, size.height.ceil() + margin, zoom, x.floor(), x.floor());
+      cLayerBindings.update_background_size(size.width.ceil() + margin, size.height.ceil() + margin, x.floor(), x.floor());
     }
   }
 
@@ -76,7 +75,7 @@ class _SpaceState extends State<Space> {
             dy = event.localPosition.dy;
             if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
               AppState.imageUpdateStatus = LengthyProcess.ongoing;
-              cLayerBindings.draw_background(zoom, x.floor(), y.floor());
+              cLayerBindings.draw_background(timer.tick, x.floor(), y.floor());
             }
           }
         },
@@ -104,7 +103,7 @@ class _SpaceState extends State<Space> {
 
           if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
             AppState.imageUpdateStatus = LengthyProcess.ongoing;
-            cLayerBindings.draw_background(zoom, x.floor(), y.floor());
+            cLayerBindings.draw_background(timer.tick, x.floor(), y.floor());
           }
         },
         behavior: HitTestBehavior.opaque,
@@ -123,6 +122,7 @@ class _SpaceState extends State<Space> {
 
     timer = Timer.periodic(const Duration(milliseconds: AppState.updateRate), (Timer t) {
       if (AppState.player.alive) {
+        dev.log('timer tick = ${timer.tick}');
         AppState.updateGameState();
         AppState.player.updatePositionAndSpeed(hoverPosition, AppState.bounds, AppState.blocks);
         setState(() {});
@@ -131,7 +131,7 @@ class _SpaceState extends State<Space> {
 
     AppState.onNewImage.subscribe(invokeSetState);
 
-    cLayerBindings.draw_background(zoom, 0, 0);
+    cLayerBindings.draw_background(timer.tick, 0, 0);
   }
 
   @override
@@ -260,10 +260,10 @@ class SpaceObject extends RenderBox {
       if (AppState.player.alive) {
         TextSpan shiftSpan = TextSpan(
           text: AppState.boardShifting
-              ? 'POWER ON'
+              ? UIConstants.powerOn
               : AppState.shiftTime >= AppState.shiftCooldown
-                  ? 'READY'
-                  : 'POWER IN ${10 - (AppState.shiftTime / 1000).floor()}',
+                  ? UIConstants.powerReady
+                  : '${UIConstants.powerIn} ${10 - (AppState.shiftTime / 1000).floor()}',
           style: Design.shiftStyle,
         );
         TextPainter shiftPainter = TextPainter(

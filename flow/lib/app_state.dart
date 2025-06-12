@@ -284,7 +284,7 @@ class AppState {
     double width = 10 + Random().nextDouble() * 10;
     double height = 50 + Random().nextDouble() * 150;
 
-    Offset position = exclusionCenter;
+    Offset position = exclusionCenter; // TODO THIS FAILS.
     while ((position - exclusionCenter).distanceSquared < pow(width, 2)) {
       position = Offset(Random().nextDouble() * (bounds.dx - width), Random().nextDouble() * (bounds.dy - height));
     }

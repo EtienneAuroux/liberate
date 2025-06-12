@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <threads.h>
+#include <math.h>
 
 #if _WIN32
 #include <windows.h>
@@ -25,6 +26,12 @@
 
 typedef void(*frame_callback)(uint64_t width, uint64_t height, uint64_t data_size, void *data);
 
+typedef enum
+{
+    grid,
+    wave
+} configuration;
+
 struct rgba
 {
     uint8_t r, g, b, a;
@@ -39,7 +46,8 @@ struct colors
 
 struct image_settings
 {
-    double zoom;
+    configuration config;
+    uint64_t cycle_time;
     uint64_t x_offset;
     uint64_t y_offset;
     uint64_t start_row;
@@ -70,10 +78,14 @@ struct context
 
 FLOW_API void initialize(frame_callback frame_callback, uint64_t width, uint64_t height);
 
-FLOW_API void update_background_size(uint64_t width, uint64_t height, double zoom, int64_t x_offset, int64_t y_offset);
+FLOW_API void update_background_size(uint64_t width, uint64_t height, int64_t x_offset, int64_t y_offset);
 
-FLOW_API void draw_background(double zoom, int64_t x_offset, int64_t y_offset);
+FLOW_API void draw_background(uint64_t cycle_time, int64_t x_offset, int64_t y_offset);
 
-FLOW_API void image_thread_entry_point(struct image_settings *settings);
+void image_thread_entry_point(struct image_settings *settings);
 
-FLOW_API int round_double_to_int(double x);
+void grid_configuration(struct image_settings *settings);
+
+void wave_configuration(struct image_settings *settings);
+
+int round_double_to_int(double x);
