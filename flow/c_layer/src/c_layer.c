@@ -5,6 +5,7 @@ static struct context context;
 FLOW_API void initialize(frame_callback frame_callback, uint64_t width, uint64_t height)
 {
   context.frame_callback = frame_callback;
+  context.background.config = grid;
   context.background.width = width;
   context.background.height = height;
 
@@ -27,11 +28,16 @@ FLOW_API void update_background_size(uint64_t width, uint64_t height, uint64_t c
   draw_background(cycle_time, x_offset, y_offset);
 }
 
+FLOW_API void update_background_config(uint8_t config_byte)
+{
+  context.background.config = config_byte;
+}
+
 FLOW_API void draw_background(uint64_t cycle_time, int64_t x_offset, int64_t y_offset)
 {
   for (int i = 0; i < context.num_image_threads; i++)
   {
-    context.image_threads[i].settings.config = wave;
+    context.image_threads[i].settings.config = context.background.config;
     context.image_threads[i].settings.cycle_time = cycle_time;
     context.image_threads[i].settings.x_offset = x_offset;
     context.image_threads[i].settings.y_offset = y_offset;
@@ -90,21 +96,58 @@ void grid_configuration(struct image_settings *settings)
 
 void wave_configuration(struct image_settings *settings)
 {
+  double offset = 100;
+  double amplitude = 30;
+  double time = settings->cycle_time / 100.0;
+
+  double angle = sin(time * 0.5) * 0.5;         // Oscillates between -0.5 and 0.5
+  double frequency = 0.01 + 0.005 * sin(time);  // Oscillates between 0.005 and 0.015
+  double scroll =  offset + fmod(settings->cycle_time * 0.05, context.background.width); // Smooth horizontal scroll
+
+  struct range ranges[] = {
+        {-80, 0.5},
+        {-60, 1.0},
+        {-40, 2.0},
+        {-20, 3.0},
+        {0, 4.0},
+        {20, 3.0},
+        {40, 2.0},
+        {60, 1.0},
+        {80, 1.0}
+  };
+
   for (int y = settings->start_row; y < settings->end_row; y++)
   {
     for (int x = 0; x < context.background.width; x++)
     {
-      double wave_x = settings->cycle_time + 20 * sin(y * 0.01);
-      if (x >= wave_x - 2 && x <= wave_x + 2) 
+      // Compute the X position of the wave line at this Y
+      double wave_x = offset + scroll + angle * y + amplitude * sin(y * frequency);
+      
+      bool is_index_in_any_range = false;
+      int num_ranges = sizeof(ranges) / sizeof(ranges[0]);
+      for (int range_index = 0; range_index < num_ranges; range_index++)
+      {
+        if (is_index_in_range(x, wave_x, ranges[range_index])) {
+          is_index_in_any_range = true;
+          break;
+        }
+      }
+
+      if (is_index_in_any_range)
       {
         context.background.pixels[y * context.background.width + x] = context.colors.line_color;
-      } 
+      }
       else
       {
         context.background.pixels[y * context.background.width + x] = context.colors.background_color;
       }
     }
   }
+}
+
+bool is_index_in_range(int index, double base, struct range range)
+{
+  return (index >= base + range.offset - range.tolerance && index <= base + range.offset + range.tolerance);
 }
 
 int round_double_to_int(double x)

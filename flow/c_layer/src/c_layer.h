@@ -32,6 +32,12 @@ typedef enum
     wave
 } configuration;
 
+struct range
+{
+    double offset;
+    double tolerance;
+};
+
 struct rgba
 {
     uint8_t r, g, b, a;
@@ -63,6 +69,7 @@ struct image_thread
 struct image
 {
     uint64_t width, height;
+    configuration config;
     struct rgba *pixels;
 };
 
@@ -78,7 +85,9 @@ struct context
 
 FLOW_API void initialize(frame_callback frame_callback, uint64_t width, uint64_t height);
 
-FLOW_API void update_background_size(uint64_t width, uint64_t height, int64_t x_offset, int64_t y_offset);
+FLOW_API void update_background_size(uint64_t width, uint64_t height, uint64_t cycle_time, int64_t x_offset, int64_t y_offset);
+
+FLOW_API void update_background_config(uint8_t config_byte);
 
 FLOW_API void draw_background(uint64_t cycle_time, int64_t x_offset, int64_t y_offset);
 
@@ -87,5 +96,7 @@ void image_thread_entry_point(struct image_settings *settings);
 void grid_configuration(struct image_settings *settings);
 
 void wave_configuration(struct image_settings *settings);
+
+bool is_index_in_range(int index, double base, struct range range);
 
 int round_double_to_int(double x);

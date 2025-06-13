@@ -14,6 +14,8 @@ import 'package:flutter/material.dart';
 
 import 'dart:developer' as dev;
 
+import 'package:flutter/services.dart';
+
 class Space extends StatefulWidget {
   const Space({super.key});
 
@@ -23,6 +25,9 @@ class Space extends StatefulWidget {
 
 class _SpaceState extends State<Space> {
   late Timer timer;
+
+  // focus node to capture keyboard events
+  final FocusNode _focusNode = FocusNode();
 
   final int margin = 100;
   final double minZoom = 0.1;
@@ -37,78 +42,88 @@ class _SpaceState extends State<Space> {
     if (AppState.imageUpdateStatus != LengthyProcess.ongoing && (size.width != _spaceSize.width || size.height != _spaceSize.height)) {
       _spaceSize = size;
       AppState.imageUpdateStatus = LengthyProcess.ongoing;
-      cLayerBindings.update_background_size(size.width.ceil() + margin, size.height.ceil() + margin, x.floor(), x.floor());
+      cLayerBindings.update_background_size(size.width.ceil() + margin, size.height.ceil() + margin, timer.tick, x.floor(), x.floor());
     }
   }
 
   Widget platformListener(Widget child, Size screenSize) {
     if (Platform.isWindows) {
-      return Listener(
-        onPointerHover: (event) {
-          hoverPosition = event.localPosition;
-          if (AppState.player.alive) {
-            AppState.player.setAngle(hoverPosition);
-          }
-        },
-        onPointerDown: (event) {
-          if (event.buttons == 1) {
-            if (AppState.shiftTime >= AppState.shiftCooldown) {
-              AppState.boardShifting = true;
-              AppState.shiftTime = 0;
-            }
-            dx = event.localPosition.dx;
-            dy = event.localPosition.dy;
-          } else if (event.buttons == 2) {
-            if (!AppState.player.alive) {
-              AppState.initializeGameState(event.localPosition, Offset(screenSize.width, screenSize.height));
-              AppState.player.alive = true;
+      return KeyboardListener(
+        focusNode: _focusNode,
+        autofocus: true,
+        onKeyEvent: (KeyEvent event) {
+          if (event is KeyDownEvent) {
+            if (event.logicalKey == LogicalKeyboardKey.digit1) {
+              cLayerBindings.update_background_config(0);
+            } else if (event.logicalKey == LogicalKeyboardKey.digit2) {
+              cLayerBindings.update_background_config(1);
             }
           }
         },
-        onPointerMove: (event) {
-          if (event.buttons == 1 && AppState.boardShifting) {
-            x += event.localPosition.dx - dx;
-            y += event.localPosition.dy - dy;
-            AppState.shift = Offset(event.localPosition.dx - dx, event.localPosition.dy - dy);
-            AppState.shiftPointer = event.localPosition;
-            dx = event.localPosition.dx;
-            dy = event.localPosition.dy;
-            if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
-              AppState.imageUpdateStatus = LengthyProcess.ongoing;
-              cLayerBindings.draw_background(timer.tick, x.floor(), y.floor());
+        child: Listener(
+          onPointerHover: (event) {
+            hoverPosition = event.localPosition;
+            if (AppState.player.alive) {
+              AppState.player.setAngle(hoverPosition);
             }
-          }
-        },
-        onPointerUp: (event) {
-          if (event.buttons == 0) {
-            AppState.boardShifting = false;
-          }
-        },
-        behavior: HitTestBehavior.opaque,
-        child: child,
+          },
+          onPointerDown: (event) {
+            if (event.buttons == 1) {
+              if (AppState.shiftTime >= AppState.shiftCooldown) {
+                AppState.boardShifting = true;
+                AppState.shiftTime = 0;
+              }
+              dx = event.localPosition.dx;
+              dy = event.localPosition.dy;
+            } else if (event.buttons == 2) {
+              if (!AppState.player.alive) {
+                AppState.initializeGameState(event.localPosition, Offset(screenSize.width, screenSize.height));
+                AppState.player.alive = true;
+              }
+            }
+          },
+          onPointerMove: (event) {
+            if (event.buttons == 1 && AppState.boardShifting) {
+              x += event.localPosition.dx - dx;
+              y += event.localPosition.dy - dy;
+              AppState.shift = Offset(event.localPosition.dx - dx, event.localPosition.dy - dy);
+              AppState.shiftPointer = event.localPosition;
+              dx = event.localPosition.dx;
+              dy = event.localPosition.dy;
+            }
+          },
+          onPointerUp: (event) {
+            if (event.buttons == 0) {
+              AppState.boardShifting = false;
+            }
+          },
+          behavior: HitTestBehavior.opaque,
+          child: child,
+        ),
       );
     } else {
-      return GestureDetector(
-        onScaleStart: (details) {
-          dx = details.localFocalPoint.dx;
-          dy = details.localFocalPoint.dy;
-        },
-        onScaleUpdate: (details) {
-          if (details.scale == 1) {
-            x += details.localFocalPoint.dx - dx;
-            y += details.localFocalPoint.dy - dy;
-            dx = details.localFocalPoint.dx;
-            dy = details.localFocalPoint.dy;
-          }
+      return const Placeholder();
+      // GestureDetector(
+      // onScaleStart: (details) {
+      //   dx = details.localFocalPoint.dx;
+      //   dy = details.localFocalPoint.dy;
+      // },
+      // onScaleUpdate: (details) {
+      //   if (details.scale == 1) {
+      //     x += details.localFocalPoint.dx - dx;
+      //     y += details.localFocalPoint.dy - dy;
+      //     dx = details.localFocalPoint.dx;
+      //     dy = details.localFocalPoint.dy;
+      //   }
 
-          if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
-            AppState.imageUpdateStatus = LengthyProcess.ongoing;
-            cLayerBindings.draw_background(timer.tick, x.floor(), y.floor());
-          }
-        },
-        behavior: HitTestBehavior.opaque,
-        child: child,
-      );
+      //   if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
+      //     AppState.imageUpdateStatus = LengthyProcess.ongoing;
+      //     cLayerBindings.draw_background(timer.tick, x.floor(), y.floor());
+      //   }
+      // },
+      // behavior: HitTestBehavior.opaque,
+      // child: child,
+      // );
     }
   }
 
@@ -121,8 +136,8 @@ class _SpaceState extends State<Space> {
     super.initState();
 
     timer = Timer.periodic(const Duration(milliseconds: AppState.updateRate), (Timer t) {
+      AppState.updateBackground(timer.tick, 0, 0);
       if (AppState.player.alive) {
-        dev.log('timer tick = ${timer.tick}');
         AppState.updateGameState();
         AppState.player.updatePositionAndSpeed(hoverPosition, AppState.bounds, AppState.blocks);
         setState(() {});
@@ -130,13 +145,13 @@ class _SpaceState extends State<Space> {
     });
 
     AppState.onNewImage.subscribe(invokeSetState);
-
-    cLayerBindings.draw_background(timer.tick, 0, 0);
   }
 
   @override
   void dispose() {
     AppState.onNewImage.unsubscribe(invokeSetState);
+
+    _focusNode.dispose();
 
     super.dispose();
   }

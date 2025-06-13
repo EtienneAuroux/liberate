@@ -104,6 +104,13 @@ class AppState {
     }
   }
 
+  static void updateBackground(int time, int xOffset, int yOffset) {
+    if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
+      AppState.imageUpdateStatus = LengthyProcess.ongoing;
+      cLayerBindings.draw_background(time, xOffset, yOffset);
+    }
+  }
+
   static void updateGameState() {
     if (player.points >= winningCondition) {
       _endGame();
@@ -284,8 +291,8 @@ class AppState {
     double width = 10 + Random().nextDouble() * 10;
     double height = 50 + Random().nextDouble() * 150;
 
-    Offset position = exclusionCenter; // TODO THIS FAILS.
-    while ((position - exclusionCenter).distanceSquared < pow(width, 2)) {
+    Offset position = exclusionCenter;
+    while ((position - exclusionCenter).distanceSquared < pow(height, 2)) {
       position = Offset(Random().nextDouble() * (bounds.dx - width), Random().nextDouble() * (bounds.dy - height));
     }
 

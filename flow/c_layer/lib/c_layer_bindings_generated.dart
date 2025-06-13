@@ -49,12 +49,14 @@ class CLayerBindings {
   void update_background_size(
     int width,
     int height,
+    int cycle_time,
     int x_offset,
     int y_offset,
   ) {
     return _update_background_size(
       width,
       height,
+      cycle_time,
       x_offset,
       y_offset,
     );
@@ -62,10 +64,24 @@ class CLayerBindings {
 
   late final _update_background_sizePtr = _lookup<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Uint64, ffi.Uint64, ffi.Int64,
+          ffi.Void Function(ffi.Uint64, ffi.Uint64, ffi.Uint64, ffi.Int64,
               ffi.Int64)>>('update_background_size');
   late final _update_background_size = _update_background_sizePtr
-      .asFunction<void Function(int, int, int, int)>();
+      .asFunction<void Function(int, int, int, int, int)>();
+
+  void update_background_config(
+    int config_byte,
+  ) {
+    return _update_background_config(
+      config_byte,
+    );
+  }
+
+  late final _update_background_configPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint8)>>(
+          'update_background_config');
+  late final _update_background_config =
+      _update_background_configPtr.asFunction<void Function(int)>();
 
   void draw_background(
     int cycle_time,
@@ -128,6 +144,24 @@ class CLayerBindings {
   late final _wave_configuration = _wave_configurationPtr
       .asFunction<void Function(ffi.Pointer<image_settings>)>();
 
+  bool is_index_in_range(
+    int index,
+    double base,
+    range range,
+  ) {
+    return _is_index_in_range(
+      index,
+      base,
+      range,
+    );
+  }
+
+  late final _is_index_in_rangePtr = _lookup<
+          ffi.NativeFunction<ffi.Bool Function(ffi.Int, ffi.Double, range)>>(
+      'is_index_in_range');
+  late final _is_index_in_range =
+      _is_index_in_rangePtr.asFunction<bool Function(int, double, range)>();
+
   int round_double_to_int(
     double x,
   ) {
@@ -146,6 +180,14 @@ class CLayerBindings {
 abstract class configuration {
   static const int grid = 0;
   static const int wave = 1;
+}
+
+final class range extends ffi.Struct {
+  @ffi.Double()
+  external double offset;
+
+  @ffi.Double()
+  external double tolerance;
 }
 
 final class rgba extends ffi.Struct {
@@ -209,6 +251,9 @@ final class image extends ffi.Struct {
 
   @ffi.Uint64()
   external int height;
+
+  @ffi.Int32()
+  external int config;
 
   external ffi.Pointer<rgba> pixels;
 }
