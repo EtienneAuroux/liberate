@@ -3,25 +3,29 @@ import 'package:flutter/material.dart';
 /// A class with design elements such as [TextStyle] and [Paint] stored as static objects.
 class Design {
   static const TextStyle pointCounterStyle = TextStyle(
-    fontFamily: 'Roboto',
+    fontFamily: 'ProtestGuerrilla',
     fontSize: 40,
-    fontWeight: FontWeight.normal,
     color: Colors.red,
     decoration: TextDecoration.none,
   );
 
   static const TextStyle shiftStyle = TextStyle(
-    fontFamily: 'Roboto',
+    fontFamily: 'ProtestGuerrilla',
     fontSize: 40,
-    fontWeight: FontWeight.normal,
     color: Colors.red,
     decoration: TextDecoration.none,
   );
 
   static const TextStyle announcementStyle = TextStyle(
-    fontFamily: 'Roboto',
+    fontFamily: 'ProtestGuerrilla',
     fontSize: 80,
-    fontWeight: FontWeight.normal,
+    color: Colors.red,
+    decoration: TextDecoration.none,
+  );
+
+  static const TextStyle subAnnouncementStyle = TextStyle(
+    fontFamily: 'ProtestGuerrilla',
+    fontSize: 40,
     color: Colors.red,
     decoration: TextDecoration.none,
   );

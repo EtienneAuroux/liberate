@@ -299,14 +299,22 @@ class SpaceObject extends RenderBox {
       if (!AppState.player.alive) {
         TextSpan announcementSpan;
         if (AppState.gameTime == 0) {
-          announcementSpan = const TextSpan(text: UIConstants.gameStart, style: Design.announcementStyle);
+          announcementSpan = const TextSpan(children: [
+            TextSpan(text: UIConstants.gameStart, style: Design.announcementStyle),
+            TextSpan(text: UIConstants.gameStartHint, style: Design.subAnnouncementStyle)
+          ]);
         } else if (AppState.player.points < AppState.winningCondition) {
-          announcementSpan = const TextSpan(text: UIConstants.gameOver, style: Design.announcementStyle);
+          announcementSpan = const TextSpan(children: [
+            TextSpan(text: UIConstants.gameOver, style: Design.announcementStyle),
+            TextSpan(text: UIConstants.gameOverRightClick, style: Design.subAnnouncementStyle),
+            TextSpan(text: UIConstants.gameOverLeftClick, style: Design.subAnnouncementStyle),
+            TextSpan(text: UIConstants.gameOverWheel, style: Design.subAnnouncementStyle),
+          ]);
         } else {
           announcementSpan = TextSpan(children: [
-            const TextSpan(text: UIConstants.gameWon),
-            TextSpan(text: Calculations.millisecondsToTime(AppState.gameTime)),
-          ], style: Design.announcementStyle);
+            const TextSpan(text: UIConstants.gameWon, style: Design.announcementStyle),
+            TextSpan(text: Calculations.millisecondsToTime(AppState.gameTime), style: Design.subAnnouncementStyle),
+          ]);
         }
         TextPainter announcementPainter = TextPainter(
           text: announcementSpan,
