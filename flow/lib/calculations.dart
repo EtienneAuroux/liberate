@@ -68,10 +68,12 @@ class Calculations {
   }
 
   /// Converts [milliseconds] to a [String] with the hh:mm:ss.sss format.
+  ///
+  /// We are not interested in times larger than a day.
   static String millisecondsToTime(int milliseconds) {
     int ms = milliseconds % 1000;
-    int seconds = milliseconds ~/ 1000;
-    int minutes = milliseconds ~/ (60 * 1000);
+    int seconds = (milliseconds ~/ 1000) % 60;
+    int minutes = (milliseconds ~/ (60 * 1000)) % 60;
     int hours = milliseconds ~/ (60 * 60 * 1000);
 
     return '${'$hours'.padLeft(2, '0')}:${'$minutes'.padLeft(2, '0')}:${'$seconds'.padLeft(2, '0')}.$ms';
