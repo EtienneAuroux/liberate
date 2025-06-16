@@ -10,6 +10,7 @@ import 'package:flow/calculations.dart';
 import 'package:flow/ui_constants.dart';
 import 'package:flow/design.dart';
 import 'package:flow/types.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'dart:developer' as dev;
@@ -65,6 +66,16 @@ class _SpaceState extends State<Space> {
             hoverPosition = event.localPosition;
             if (AppState.player.alive) {
               AppState.player.setAngle(hoverPosition);
+            }
+          },
+          onPointerSignal: (event) {
+            if (event is PointerScrollEvent) {
+              dev.log(event.scrollDelta.dy.toString());
+              if (event.scrollDelta.dy > 0) {
+                cLayerBindings.update_background_color(5);
+              } else if (event.scrollDelta.dy < 0) {
+                cLayerBindings.update_background_color(-5);
+              }
             }
           },
           onPointerDown: (event) {

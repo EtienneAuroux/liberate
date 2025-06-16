@@ -46,6 +46,20 @@ class CLayerBindings {
   late final _initialize =
       _initializePtr.asFunction<void Function(frame_callback, int, int)>();
 
+  void update_background_color(
+    int increment,
+  ) {
+    return _update_background_color(
+      increment,
+    );
+  }
+
+  late final _update_background_colorPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int)>>(
+          'update_background_color');
+  late final _update_background_color =
+      _update_background_colorPtr.asFunction<void Function(int)>();
+
   void update_background_size(
     int width,
     int height,

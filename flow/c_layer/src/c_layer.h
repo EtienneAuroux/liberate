@@ -85,6 +85,8 @@ struct context
 
 FLOW_API void initialize(frame_callback frame_callback, uint64_t width, uint64_t height);
 
+FLOW_API void update_background_color(int increment);
+
 FLOW_API void update_background_size(uint64_t width, uint64_t height, uint64_t cycle_time, int64_t x_offset, int64_t y_offset);
 
 FLOW_API void update_background_config(uint8_t config_byte);

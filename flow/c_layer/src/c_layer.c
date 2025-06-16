@@ -2,7 +2,7 @@
 
 static struct context context;
 
-FLOW_API void initialize(frame_callback frame_callback, uint64_t width, uint64_t height)
+void initialize(frame_callback frame_callback, uint64_t width, uint64_t height)
 {
   context.frame_callback = frame_callback;
   context.background.config = wave;
@@ -21,19 +21,37 @@ FLOW_API void initialize(frame_callback frame_callback, uint64_t width, uint64_t
   context.background.pixels = malloc(context.background.height * context.background.width * sizeof(struct rgba));
 }
 
-FLOW_API void update_background_size(uint64_t width, uint64_t height, uint64_t cycle_time, int64_t x_offset, int64_t y_offset)
+void update_background_color(int increment)
+{
+  struct rgba new_background_color = context.colors.background_color;
+  if (new_background_color.r + increment >= 0 && new_background_color.r + increment <= 255)
+  {
+    new_background_color.r += increment;
+  }
+  if (new_background_color.g + increment >= 0 && new_background_color.g + increment <= 255)
+  {
+    new_background_color.g += increment;
+  }
+  if (new_background_color.b + increment >= 0 && new_background_color.b + increment <= 255)
+  {
+    new_background_color.b+= increment;
+  }
+  context.colors.background_color = new_background_color;
+}
+
+void update_background_size(uint64_t width, uint64_t height, uint64_t cycle_time, int64_t x_offset, int64_t y_offset)
 {
   context.background.width = width;
   context.background.height = height;
   draw_background(cycle_time, x_offset, y_offset);
 }
 
-FLOW_API void update_background_config(uint8_t config_byte)
+void update_background_config(uint8_t config_byte)
 {
   context.background.config = config_byte;
 }
 
-FLOW_API void draw_background(uint64_t cycle_time, int64_t x_offset, int64_t y_offset)
+void draw_background(uint64_t cycle_time, int64_t x_offset, int64_t y_offset)
 {
   for (int i = 0; i < context.num_image_threads; i++)
   {
