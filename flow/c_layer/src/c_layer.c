@@ -5,7 +5,7 @@ static struct context context;
 FLOW_API void initialize(frame_callback frame_callback, uint64_t width, uint64_t height)
 {
   context.frame_callback = frame_callback;
-  context.background.config = grid;
+  context.background.config = wave;
   context.background.width = width;
   context.background.height = height;
 
@@ -120,7 +120,6 @@ void wave_configuration(struct image_settings *settings)
   {
     for (int x = 0; x < context.background.width; x++)
     {
-      // Compute the X position of the wave line at this Y
       double wave_x = offset + scroll + angle * y + amplitude * sin(y * frequency);
       
       bool is_index_in_any_range = false;
