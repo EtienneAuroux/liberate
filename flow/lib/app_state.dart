@@ -3,7 +3,6 @@ import 'dart:ffi';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
-import 'dart:ui';
 
 import 'package:event/event.dart';
 import 'package:flow/bindings.dart';
@@ -14,7 +13,7 @@ import 'dart:developer' as dev;
 import 'package:flow/types.dart';
 
 class AppState {
-  // SPACE RELATED OBJECTS //
+  // --------------------------------------- BACKGROUND RELATED OBJECTS --------------------------------------- //
   static Painting painting = Painting();
 
   static Event onNewImage = Event();
@@ -57,7 +56,7 @@ class AppState {
     imageUpdateStatus = LengthyProcess.done;
   }
 
-  // GAME RELATED OBJECTS //
+  // --------------------------------------- GAME RELATED OBJECTS --------------------------------------- //
   /// The player defined by its position, direction, speed, radius and alive status.
   static Player player = Player();
 
@@ -70,31 +69,85 @@ class AppState {
   /// The minimum number of points required to win the game.
   static const int winningCondition = 200;
 
-  /// A flag that is true when the user shifts the board and false otherwise.
+  /// A flag that is true when the user utilizes their power and false otherwise.
   static bool boardShifting = false;
-  static Offset shift = Offset.zero;
-  static Offset shiftPointer = Offset.zero;
+
+  /// The bounds of the screen as defined by its bottom-right corner coordinates.
+  static ui.Offset bounds = ui.Offset.zero;
+
+  /// The magnitude of the shift imposed by the user while utilizing their power.
+  static ui.Offset shift = ui.Offset.zero;
+
+  /// The position of the pointer when [boardShifting] is true.
+  static ui.Offset shiftPointer = ui.Offset.zero;
+
+  /// The time that must be waiting between two activation of their power by the user in milliseconds.
   static const int shiftCooldown = 10000;
+
+  /// The maximum time during which the user's power can be used in milliseconds.
   static const int shiftOnTime = 2000;
+
+  /// The time that the user's power has been used in milliseconds.
   static int shiftTime = 0;
 
-  static List<Target> targets = List.filled(_maxTargets, Target(Offset.zero, 0, 0), growable: false);
+  /// A non-growable list of all existing [Target].
+  ///
+  /// There are 3 [Target] existing at all times.
+  static List<Target> targets = List.filled(_maxTargets, Target(ui.Offset.zero, 0, 0), growable: false);
+
+  /// The list of existing [Enemy].
+  ///
+  /// Note that the list only expands toward the maximum possible number of [Enemy] and is only cleared upon the death of the [Player].
   static List<Enemy> enemies = <Enemy>[];
+
+  /// The list of existing [Block]. Also contains [BouncingBlock].
+  ///
+  /// Note that the list only expands toward the maximum possible number of [Block] and is only cleared upon the death of the [Player].
   static List<Block> blocks = <Block>[];
+
+  /// The list of existing [Laser].
+  ///
+  /// Note that the list only expands toward the maximum possible number of [Laser] and is only cleared upon the death of the [Player].
   static List<Laser> lasers = <Laser>[];
-  static Offset bounds = Offset.zero;
+
+  /// The minimum number of points required for a [Enemy] to be created.
+  ///
+  /// Also serves as the number of point the player must accumulate since the last [Enemy] has appeared for another [Enemy] to be created.
   static const int _enemiesThreshold = 5;
+
+  /// The minimum number of points required for a [Block] to be created.
   static const int _blocksThreshold = 25;
-  static const int _bouncingBlocksInterval = 3;
+
+  /// The minimum number of points required for a [Laser] to be created.
   static const int _laserThreshold = 70;
+
+  /// The maximum number of [Target] that can be present on the screen at any given time.
   static const int _maxTargets = 3;
+
+  /// The maximum number of [Enemy] that can be present on the screen at any given time.
   static const int _maxEnemies = 30;
+
+  /// The maximum number of [Block] that can be present on the screen at any given time.
   static const int _maxBlocks = 20;
+
+  /// The maximum number of [Laser] that can be present on the screen at any given time.
   static const int _maxLaser = 5;
+
+  /// The number of point the player must accumulate since the last [Block] has appeared for another [Block] to be created.
   static const int _blockStep = 8;
+
+  /// When a [Block] is created if the number of [Block] would become a multiple of [_bouncingBlocksInterval] then a [BouncingBlock] is created instead.
+  ///
+  /// Note that since a [BouncingBlock] is a [Block], the number of existing [BouncingBlock] is also taken into account.
+  static const int _bouncingBlocksInterval = 3;
+
+  /// The number of point the player must accumulate since the last [Laser] has appeared for another [Laser] to be created.
   static const int _laserStep = 20;
 
-  static void initializeGameState(Offset pointerPosition, Offset bounds) {
+  /// Initialize the game upon the user right click whilst [Player] is not alive.
+  ///
+  /// The [Player] will be created at [pointerPosition].
+  static void initializeGameState(ui.Offset pointerPosition) {
     gameTime = DateTime.now().millisecondsSinceEpoch;
 
     player.initializePosition(pointerPosition);
@@ -104,6 +157,7 @@ class AppState {
     }
   }
 
+  /// Asks the c_layer to update the background of the game based on the game [time].
   static void updateBackground(int time, int xOffset, int yOffset) {
     if (AppState.imageUpdateStatus != LengthyProcess.ongoing) {
       AppState.imageUpdateStatus = LengthyProcess.ongoing;
@@ -111,6 +165,13 @@ class AppState {
     }
   }
 
+  /// Update the state of the [Player], all [Target], all [Enemy] and all [Laser] existing.
+  ///
+  /// Based on the number of points earned by the [Player], creates new [Enemy], [Block] and [Laser].
+  ///
+  /// Handles end game conditions.
+  ///
+  /// Handles board shifting events corresponding to the user using their power.
   static void updateGameState() {
     if (player.points >= winningCondition) {
       _endGame();
@@ -218,7 +279,7 @@ class AppState {
   static void _endGame() {
     player.death();
     for (int targetIndex = 0; targetIndex < targets.length; targetIndex++) {
-      targets[targetIndex] = Target(Offset.zero, 0, 0);
+      targets[targetIndex] = Target(ui.Offset.zero, 0, 0);
     }
     enemies.clear();
     blocks.clear();
@@ -241,17 +302,17 @@ class AppState {
         object.centerPosition.dy - margin >= bounds.dy;
   }
 
-  /// Create a random [Target] some distance away from the [exclusionCenter] point.
+  /// Creates a random [Target] some distance away from the [exclusionCenter] point.
   ///
   /// The [Target]'s size is inversely proportional to the number of points ([1;5]) it contains.
-  static Target _createTarget(Offset exclusionCenter) {
+  static Target _createTarget(ui.Offset exclusionCenter) {
     int point = Random().nextInt(5) + 1;
     double hitBoxRadius = 35 - point * 5;
 
-    Offset position = exclusionCenter;
+    ui.Offset position = exclusionCenter;
     while ((position - exclusionCenter).distanceSquared < 1000) {
-      position =
-          Offset(hitBoxRadius + Random().nextDouble() * (bounds.dx - hitBoxRadius * 2), hitBoxRadius + Random().nextDouble() * (bounds.dy - hitBoxRadius * 2));
+      position = ui.Offset(
+          hitBoxRadius + Random().nextDouble() * (bounds.dx - hitBoxRadius * 2), hitBoxRadius + Random().nextDouble() * (bounds.dy - hitBoxRadius * 2));
     }
 
     return Target(position, hitBoxRadius, point);
@@ -260,22 +321,22 @@ class AppState {
   /// Returns a random [Enemy] that starts its course outside a ramdom edge of the screen.
   ///
   /// The direction of the [Enemy] is set toward the [aimedPosition].
-  static Enemy _createEnemy(Offset aimedPosition) {
+  static Enemy _createEnemy(ui.Offset aimedPosition) {
     const double hitBoxRadius = 15;
     Edge entryEdge = Edge.values[Random().nextInt(4)];
-    Offset startPosition;
+    ui.Offset startPosition;
     switch (entryEdge) {
       case Edge.left:
-        startPosition = Offset(-hitBoxRadius, Random().nextDouble() * bounds.dy);
+        startPosition = ui.Offset(-hitBoxRadius, Random().nextDouble() * bounds.dy);
         break;
       case Edge.top:
-        startPosition = Offset(Random().nextDouble() * bounds.dx, -hitBoxRadius);
+        startPosition = ui.Offset(Random().nextDouble() * bounds.dx, -hitBoxRadius);
         break;
       case Edge.right:
-        startPosition = Offset(bounds.dx + hitBoxRadius, Random().nextDouble() * bounds.dy);
+        startPosition = ui.Offset(bounds.dx + hitBoxRadius, Random().nextDouble() * bounds.dy);
         break;
       case Edge.bottom:
-        startPosition = Offset(Random().nextDouble() * bounds.dx, bounds.dy + hitBoxRadius);
+        startPosition = ui.Offset(Random().nextDouble() * bounds.dx, bounds.dy + hitBoxRadius);
         break;
     }
     double angle = atan2((aimedPosition.dy - startPosition.dy), (aimedPosition.dx - startPosition.dx));
@@ -287,13 +348,13 @@ class AppState {
   /// Returns a random [Block] some distance away from the [exclusionCenter] point.
   ///
   /// If [bouncing] is true, returns a random [BouncingBlock] instead.
-  static Block _createBlock(Offset exclusionCenter, bool bouncing) {
+  static Block _createBlock(ui.Offset exclusionCenter, bool bouncing) {
     double width = 10 + Random().nextDouble() * 10;
     double height = 50 + Random().nextDouble() * 150;
 
-    Offset position = exclusionCenter;
+    ui.Offset position = exclusionCenter;
     while ((position - exclusionCenter).distanceSquared < pow(height, 2)) {
-      position = Offset(Random().nextDouble() * (bounds.dx - width), Random().nextDouble() * (bounds.dy - height));
+      position = ui.Offset(Random().nextDouble() * (bounds.dx - width), Random().nextDouble() * (bounds.dy - height));
     }
 
     if (Random().nextBool()) {
@@ -304,23 +365,23 @@ class AppState {
   }
 
   /// Returns a random [Laser] some distance away from the [exclusionCenter] point.
-  static Laser _createLaser(Offset exclusionCenter) {
+  static Laser _createLaser(ui.Offset exclusionCenter) {
     Edge entryEdge = [Edge.left, Edge.top][Random().nextInt(2)];
-    Offset startPosition, endPosition;
+    ui.Offset startPosition, endPosition;
     if (entryEdge == Edge.left) {
       double start = exclusionCenter.dy;
       while ((start - exclusionCenter.dy).abs() < 150) {
         start = Random().nextDouble() * bounds.dy;
       }
-      startPosition = Offset(0, start);
-      endPosition = startPosition + Offset(bounds.dx, 0);
+      startPosition = ui.Offset(0, start);
+      endPosition = startPosition + ui.Offset(bounds.dx, 0);
     } else {
       double start = exclusionCenter.dx;
       while ((start - exclusionCenter.dx).abs() < 150) {
         start = Random().nextDouble() * bounds.dx;
       }
-      startPosition = Offset(start, 0);
-      endPosition = startPosition + Offset(0, bounds.dy);
+      startPosition = ui.Offset(start, 0);
+      endPosition = startPosition + ui.Offset(0, bounds.dy);
     }
 
     return Laser(startPosition, endPosition);

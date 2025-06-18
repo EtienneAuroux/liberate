@@ -86,7 +86,7 @@ class _SpaceState extends State<Space> {
               dy = event.localPosition.dy;
             } else if (event.buttons == 2) {
               if (!AppState.player.alive) {
-                AppState.initializeGameState(event.localPosition, Offset(screenSize.width, screenSize.height));
+                AppState.initializeGameState(event.localPosition);
                 AppState.player.alive = true;
               }
             }
