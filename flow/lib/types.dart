@@ -67,6 +67,11 @@ class Player {
   /// The angle determines the direction of the [Player] with respect to the bottom-left corner of the 2D cartesian reference system represented by the screen.
   double _angle = 0;
 
+  /// The angle of the [Player] in radians.
+  ///
+  /// The angle determines the direction of the [Player] with respect to the bottom-left corner of the 2D cartesian reference system represented by the screen.
+  double get angle => _angle;
+
   /// The speed of the [Player] in pixel per time unit.
   double _speed = 0;
 
@@ -206,7 +211,9 @@ class Enemy extends CircularObject {
   /// Multiplies the speed of the [Enemy] by the encountered [BouncingBlock]'s [chock] value.
   void bounce(double chock) {
     angle += pi;
-    speed *= chock;
+    if (speed * chock >= hitBoxRadius / 2) {
+      speed *= chock;
+    }
   }
 
   /// Reorients the [Enemy] toward the [pointerPosition] and adds a [shift] to it.

@@ -8,7 +8,6 @@ import 'package:flow/app_state.dart';
 import 'package:flow/bindings.dart';
 import 'package:flow/calculations.dart';
 import 'package:flow/ui_constants.dart';
-import 'package:flow/design.dart';
 import 'package:flow/types.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -70,7 +69,6 @@ class _SpaceState extends State<Space> {
           },
           onPointerSignal: (event) {
             if (event is PointerScrollEvent) {
-              dev.log(event.scrollDelta.dy.toString());
               if (event.scrollDelta.dy > 0) {
                 cLayerBindings.update_background_color(5);
               } else if (event.scrollDelta.dy < 0) {
@@ -214,12 +212,49 @@ class SpaceObject extends RenderBox {
       );
 
       if (AppState.player.alive) {
-        context.canvas.drawCircle(AppState.player.centerPosition, AppState.player.hitBoxRadius, Design.playerPaint);
+        // Draw player
+        context.canvas.drawCircle(AppState.player.centerPosition, AppState.player.hitBoxRadius, UIConstants.playerPaint);
+        context.canvas.drawVertices(
+          Vertices(
+            VertexMode.triangles,
+            [
+              AppState.player.centerPosition +
+                  Offset(
+                    AppState.player.hitBoxRadius * cos(AppState.player.angle),
+                    AppState.player.hitBoxRadius * sin(AppState.player.angle),
+                  ),
+              AppState.player.centerPosition +
+                  Offset(
+                    (AppState.player.hitBoxRadius * 0.9) * cos(AppState.player.angle + 15),
+                    (AppState.player.hitBoxRadius * 0.9) * sin(AppState.player.angle + 15),
+                  ),
+              AppState.player.centerPosition +
+                  Offset(
+                    (AppState.player.hitBoxRadius * 0.9) * cos(AppState.player.angle - 15),
+                    (AppState.player.hitBoxRadius * 0.9) * sin(AppState.player.angle - 15),
+                  ),
+            ],
+          ),
+          BlendMode.color,
+          UIConstants.playerArrowPaint,
+        );
+
+        // Draw targets
         for (Target target in AppState.targets) {
-          context.canvas.drawCircle(target.centerPosition, target.hitBoxRadius, Design.targetPaint);
+          context.canvas.drawCircle(target.centerPosition, target.hitBoxRadius, UIConstants.targetPaint);
+          context.canvas.drawRect(
+            Rect.fromCenter(
+              center: target.centerPosition,
+              width: target.hitBoxRadius * 0.75,
+              height: target.hitBoxRadius * 0.75,
+            ),
+            UIConstants.targetCorePaint,
+          );
         }
+
+        // Draw enemies
         for (Enemy enemy in AppState.enemies) {
-          context.canvas.drawCircle(enemy.centerPosition, enemy.hitBoxRadius, Design.enemyPaint);
+          context.canvas.drawCircle(enemy.centerPosition, enemy.hitBoxRadius, UIConstants.enemyPaint);
           context.canvas.drawVertices(
             Vertices(
               VertexMode.triangles,
@@ -242,17 +277,37 @@ class SpaceObject extends RenderBox {
               ],
             ),
             BlendMode.color,
-            Paint()..color = Colors.blueGrey,
+            UIConstants.enemyArrowPaint,
           );
         }
+
+        // Draw blocks
         for (Block block in AppState.blocks) {
+          context.canvas.drawRect(Rect.fromLTWH(block.position.dx, block.position.dy, block.width, block.height), UIConstants.blockPaint);
           if (block is BouncingBlock) {
-            context.canvas.drawRect(Rect.fromLTWH(block.position.dx, block.position.dy, block.width, block.height), Design.bouncingBLockPaint);
+            context.canvas.drawRect(
+              Rect.fromLTWH(
+                block.position.dx + UIConstants.bouncingBlockBorderPaint.strokeWidth / 2,
+                block.position.dy + UIConstants.bouncingBlockBorderPaint.strokeWidth / 2,
+                block.width - UIConstants.bouncingBlockBorderPaint.strokeWidth,
+                block.height - UIConstants.bouncingBlockBorderPaint.strokeWidth,
+              ),
+              UIConstants.bouncingBlockBorderPaint,
+            );
           } else {
-            context.canvas.drawRect(Rect.fromLTWH(block.position.dx, block.position.dy, block.width, block.height), Design.blockPaint);
+            context.canvas.drawRect(
+              Rect.fromLTWH(
+                block.position.dx + UIConstants.blockBorderPaint.strokeWidth / 2,
+                block.position.dy + UIConstants.blockBorderPaint.strokeWidth / 2,
+                block.width - UIConstants.blockBorderPaint.strokeWidth,
+                block.height - UIConstants.blockBorderPaint.strokeWidth,
+              ),
+              UIConstants.blockBorderPaint,
+            );
           }
         }
 
+        // Draw lasers
         for (Laser laser in AppState.lasers) {
           context.canvas.drawLine(
             laser.startPosition,
@@ -267,7 +322,7 @@ class SpaceObject extends RenderBox {
 
       TextSpan pointCounterSpan = TextSpan(
         text: AppState.player.points.toString().padLeft(4, '0'),
-        style: Design.pointCounterStyle,
+        style: UIConstants.pointCounterStyle,
       );
       TextPainter pointCounterPainter = TextPainter(
         text: pointCounterSpan,
@@ -290,7 +345,7 @@ class SpaceObject extends RenderBox {
               : AppState.shiftTime >= AppState.shiftCooldown
                   ? UIConstants.powerReady
                   : '${UIConstants.powerIn} ${10 - (AppState.shiftTime / 1000).floor()}',
-          style: Design.shiftStyle,
+          style: UIConstants.shiftStyle,
         );
         TextPainter shiftPainter = TextPainter(
           text: shiftSpan,
@@ -311,20 +366,20 @@ class SpaceObject extends RenderBox {
         TextSpan announcementSpan;
         if (AppState.gameTime == 0) {
           announcementSpan = const TextSpan(children: [
-            TextSpan(text: UIConstants.gameStart, style: Design.announcementStyle),
-            TextSpan(text: UIConstants.gameStartHint, style: Design.subAnnouncementStyle)
+            TextSpan(text: UIConstants.gameStart, style: UIConstants.announcementStyle),
+            TextSpan(text: UIConstants.gameStartHint, style: UIConstants.subAnnouncementStyle)
           ]);
         } else if (AppState.player.points < AppState.winningCondition) {
           announcementSpan = const TextSpan(children: [
-            TextSpan(text: UIConstants.gameOver, style: Design.announcementStyle),
-            TextSpan(text: UIConstants.gameOverRightClick, style: Design.subAnnouncementStyle),
-            TextSpan(text: UIConstants.gameOverLeftClick, style: Design.subAnnouncementStyle),
-            TextSpan(text: UIConstants.gameOverWheel, style: Design.subAnnouncementStyle),
+            TextSpan(text: UIConstants.gameOver, style: UIConstants.announcementStyle),
+            TextSpan(text: UIConstants.gameOverRightClick, style: UIConstants.subAnnouncementStyle),
+            TextSpan(text: UIConstants.gameOverLeftClick, style: UIConstants.subAnnouncementStyle),
+            TextSpan(text: UIConstants.gameOverWheel, style: UIConstants.subAnnouncementStyle),
           ]);
         } else {
           announcementSpan = TextSpan(children: [
-            const TextSpan(text: UIConstants.gameWon, style: Design.announcementStyle),
-            TextSpan(text: Calculations.millisecondsToTime(AppState.gameTime), style: Design.subAnnouncementStyle),
+            const TextSpan(text: UIConstants.gameWon, style: UIConstants.announcementStyle),
+            TextSpan(text: Calculations.millisecondsToTime(AppState.gameTime), style: UIConstants.subAnnouncementStyle),
           ]);
         }
         TextPainter announcementPainter = TextPainter(

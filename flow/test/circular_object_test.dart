@@ -34,6 +34,8 @@ void main() {
       expect(enemy.angle, equals(initialAngle + pi));
     });
 
+    // TODO ADD TEST TO CHECK BOUNCING SPEED MOD CONDITION
+
     test('Shift position', () {
       final Offset initialPosition = enemy.centerPosition;
       const Offset shift = Offset(50, 50);
