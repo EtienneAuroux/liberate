@@ -14,8 +14,8 @@ void main() {
   });
 
   group('Enemy class', () {
-    final Enemy enemy = Enemy(const Offset(100, 100), 20, pi / 4, 5);
     test('Enemy position update', () {
+      final Enemy enemy = Enemy(const Offset(100, 100), 20, pi / 4, 15);
       final Offset initialPosition = enemy.centerPosition;
 
       enemy.updatePosition();
@@ -25,6 +25,7 @@ void main() {
     });
 
     test('Enemy bounce', () {
+      final Enemy enemy = Enemy(const Offset(100, 100), 20, pi / 4, 15);
       final double initialSpeed = enemy.speed;
       final double initialAngle = enemy.angle;
 
@@ -34,9 +35,19 @@ void main() {
       expect(enemy.angle, equals(initialAngle + pi));
     });
 
-    // TODO ADD TEST TO CHECK BOUNCING SPEED MOD CONDITION
+    test('Enemy bounce with no speed update', () {
+      final Enemy enemy = Enemy(const Offset(100, 100), 20, pi / 4, 15);
+      final double initialSpeed = enemy.speed;
+      final double initialAngle = enemy.angle;
+
+      enemy.bounce(0.5);
+
+      expect(enemy.angle, initialAngle + pi);
+      expect(enemy.speed, initialSpeed);
+    });
 
     test('Shift position', () {
+      final Enemy enemy = Enemy(const Offset(100, 100), 20, pi / 4, 15);
       final Offset initialPosition = enemy.centerPosition;
       const Offset shift = Offset(50, 50);
       const Offset pointerPosition = Offset(300, 400);

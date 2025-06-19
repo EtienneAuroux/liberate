@@ -5,7 +5,6 @@ import 'dart:ui';
 
 import 'package:event/event.dart';
 import 'package:flow/app_state.dart';
-import 'package:flow/bindings.dart';
 import 'package:flow/calculations.dart';
 import 'package:flow/ui_constants.dart';
 import 'package:flow/types.dart';

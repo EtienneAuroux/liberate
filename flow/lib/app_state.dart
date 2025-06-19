@@ -206,6 +206,7 @@ class AppState {
   static void updateGameState() {
     if (player.points >= winningCondition) {
       _endGame();
+      return;
     }
 
     for (int targetIndex = 0; targetIndex < targets.length; targetIndex++) {

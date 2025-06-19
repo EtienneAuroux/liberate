@@ -6,9 +6,8 @@ import 'package:flow/types.dart';
 
 void main() {
   group('Calculations.blockAndCircleOverlap', () {
-    final Block block = Block(20, 20, const Offset(10, 10));
-
     test('Overlap when circle center is inside block', () {
+      final Block block = Block(20, 20, const Offset(10, 10));
       final CircularObject circle = CircularObject(const Offset(15, 15), 5);
 
       bool overlap = Calculations.blockAndCircleOverlap(block, circle);
@@ -17,6 +16,7 @@ void main() {
     });
 
     test('No overlap when circle is far outside block', () {
+      final Block block = Block(20, 20, const Offset(10, 10));
       final CircularObject circle = CircularObject(const Offset(100, 100), 5);
 
       bool overlap = Calculations.blockAndCircleOverlap(block, circle);
@@ -25,6 +25,7 @@ void main() {
     });
 
     test('Edge overlap when circle just touches block corner', () {
+      final Block block = Block(20, 20, const Offset(10, 10));
       final CircularObject circle = CircularObject(const Offset(35, 35), sqrt(50));
 
       bool overlap = Calculations.blockAndCircleOverlap(block, circle);
@@ -33,6 +34,7 @@ void main() {
     });
 
     test('Overlap when circle is partially outside block', () {
+      final Block block = Block(20, 20, const Offset(10, 10));
       final CircularObject circle = CircularObject(const Offset(25, 15), 5);
 
       bool overlap = Calculations.blockAndCircleOverlap(block, circle);
@@ -42,9 +44,8 @@ void main() {
   });
 
   group('Calculations.circleToBlockVector', () {
-    final Block block = Block(20, 20, const Offset(10, 10));
-
     test('Vector is zero when circle overlaps block', () {
+      final Block block = Block(20, 20, const Offset(10, 10));
       final CircularObject circle = CircularObject(const Offset(15, 15), 5);
 
       final Offset vector = Calculations.circleToBlockVector(block, circle);
@@ -53,6 +54,7 @@ void main() {
     });
 
     test('Returns positive offset when circle is to left/top of block', () {
+      final Block block = Block(20, 20, const Offset(10, 10));
       final CircularObject circle = CircularObject(const Offset(0, 0), 2);
 
       final Offset vector = Calculations.circleToBlockVector(block, circle);
@@ -62,6 +64,7 @@ void main() {
     });
 
     test('Returns offset when circle is on the right/bottom of block', () {
+      final Block block = Block(20, 20, const Offset(10, 10));
       final CircularObject circle = CircularObject(const Offset(40, 40), 5);
 
       final Offset vector = Calculations.circleToBlockVector(block, circle);
