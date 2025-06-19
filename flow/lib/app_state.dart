@@ -12,14 +12,26 @@ import 'dart:developer' as dev;
 
 import 'package:flow/types.dart';
 
+/// The [AppState] handles the game objects ([Player], [Target], [Enemy], [Block], [BouncingBlock], [Laser])
+/// and manages the game mechanics such as points, collisions and user interactions at each tick.
+///
+/// The [AppState] also handles communication with the underlying c_layer and serves as liaison between the c_layer and the rest of the software.
 class AppState {
   // --------------------------------------- BACKGROUND RELATED OBJECTS --------------------------------------- //
+  /// The [Painting] holding the latest valid background received from the c_layer.
   static Painting painting = Painting();
 
+  /// Notifies listening widgets each time a new [Painting] has been successfully received from the c_layer and processed via [_handleNewFrame].
   static Event onNewImage = Event();
 
+  /// Keeps track of calls to the c_layer to process a new background.
+  ///
+  /// Calls switch the [LengthyProcess] to [LengthyProcess.ongoing] and [_handleNewFrame] will switch it to [LengthyProcess.failed] and [LengthyProcess.done] based on the validity of the [FrameEvent].
   static LengthyProcess imageUpdateStatus = LengthyProcess.unknown;
 
+  /// Initializes the c_layer with the screen size.
+  ///
+  /// If the screen is too big will default to 3500x2000.
   static void initialize() {
     ui.Size size = ui.PlatformDispatcher.instance.views.first.physicalSize;
     double pixelRatio = ui.PlatformDispatcher.instance.views.first.devicePixelRatio;
@@ -30,11 +42,30 @@ class AppState {
     cLayerBindings.initialize(Pointer.fromFunction<FuncPtrNewFrame>(_onNewFrame), maxWidth, maxHeight);
   }
 
+  /// When the user resizes the screen, conveys the change to the c_layer.
+  static void updateBackgroundSize(int width, int height, int gameTime, int xOffset, int yOffset) {
+    cLayerBindings.update_background_size(width, height, gameTime, xOffset, yOffset);
+  }
+
+  /// Notifies the c_layer that the user wants to change the [BackgroundConfiguration].
+  static void changeBackgroundConfiguration(BackgroundConfiguration configuration) {
+    cLayerBindings.update_background_config(configuration.index);
+  }
+
+  /// When the user adjusts the colors of the game, conveys the change to the c_layer.
+  static void updateBackgroundColor(int increment) {
+    cLayerBindings.update_background_color(increment);
+  }
+
+  /// Receives frame_callback from the c_layer and converts it to a [FrameEvent] on the dart side.
   static void _onNewFrame(int width, int height, int dataSize, Pointer<Void> data) {
     FrameEvent frameEvent = FrameEvent(width, height, data, dataSize);
     _handleNewFrame(frameEvent);
   }
 
+  /// Handles a [FrameEvent] and if valid will convert the buffer into a [Painting] that can be shown on a flutter canvas.
+  ///
+  /// If successful broadcast an [Event] to listening widgets.
   static Future<void> _handleNewFrame(FrameEvent? frame) async {
     if (frame == null) {
       imageUpdateStatus = LengthyProcess.failed;

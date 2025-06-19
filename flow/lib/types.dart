@@ -326,3 +326,11 @@ enum Edge {
   right,
   bottom,
 }
+
+/// An enum listing the possible configuration for the background.
+///
+/// Can then be used to notify the c_layer of the chosen configuration.
+enum BackgroundConfiguration {
+  grid,
+  wave,
+}

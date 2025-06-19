@@ -42,7 +42,7 @@ class _SpaceState extends State<Space> {
     if (AppState.imageUpdateStatus != LengthyProcess.ongoing && (size.width != _spaceSize.width || size.height != _spaceSize.height)) {
       _spaceSize = size;
       AppState.imageUpdateStatus = LengthyProcess.ongoing;
-      cLayerBindings.update_background_size(size.width.ceil() + margin, size.height.ceil() + margin, timer.tick, x.floor(), x.floor());
+      AppState.updateBackgroundSize(size.width.ceil() + margin, size.height.ceil() + margin, timer.tick, x.floor(), x.floor());
     }
   }
 
@@ -54,9 +54,9 @@ class _SpaceState extends State<Space> {
         onKeyEvent: (KeyEvent event) {
           if (event is KeyDownEvent) {
             if (event.logicalKey == LogicalKeyboardKey.digit1) {
-              cLayerBindings.update_background_config(0);
+              AppState.changeBackgroundConfiguration(BackgroundConfiguration.grid);
             } else if (event.logicalKey == LogicalKeyboardKey.digit2) {
-              cLayerBindings.update_background_config(1);
+              AppState.changeBackgroundConfiguration(BackgroundConfiguration.wave);
             }
           }
         },
@@ -70,9 +70,9 @@ class _SpaceState extends State<Space> {
           onPointerSignal: (event) {
             if (event is PointerScrollEvent) {
               if (event.scrollDelta.dy > 0) {
-                cLayerBindings.update_background_color(5);
+                AppState.updateBackgroundColor(5);
               } else if (event.scrollDelta.dy < 0) {
-                cLayerBindings.update_background_color(-5);
+                AppState.updateBackgroundColor(-5);
               }
             }
           },
