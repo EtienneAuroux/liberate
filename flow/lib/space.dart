@@ -11,7 +11,7 @@ import 'package:flow/types.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import 'dart:developer' as dev;
+// import 'dart:developer' as dev;
 
 import 'package:flutter/services.dart';
 
@@ -369,11 +369,16 @@ class SpaceObject extends RenderBox {
             TextSpan(text: UIConstants.gameStartHint, style: UIConstants.subAnnouncementStyle)
           ]);
         } else if (AppState.player.points < AppState.winningCondition) {
-          announcementSpan = const TextSpan(children: [
-            TextSpan(text: UIConstants.gameOver, style: UIConstants.announcementStyle),
-            TextSpan(text: UIConstants.gameOverRightClick, style: UIConstants.subAnnouncementStyle),
-            TextSpan(text: UIConstants.gameOverLeftClick, style: UIConstants.subAnnouncementStyle),
-            TextSpan(text: UIConstants.gameOverWheel, style: UIConstants.subAnnouncementStyle),
+          announcementSpan = TextSpan(children: [
+            const TextSpan(text: UIConstants.gameOver, style: UIConstants.announcementStyle),
+            ...List.generate(
+              AppState.highScores.length,
+              (index) => TextSpan(
+                text:
+                    '${AppState.highScores[index].position}.\t${Calculations.convertEpochToDate(AppState.highScores[index].dateMsSinceEpoch)}\t${AppState.highScores[index].points.toString().padLeft(3, ' ')} points\t${Calculations.millisecondsToTime(AppState.highScores[index].time)}\n',
+                style: UIConstants.subAnnouncementStyle,
+              ),
+            ),
           ]);
         } else {
           announcementSpan = TextSpan(children: [

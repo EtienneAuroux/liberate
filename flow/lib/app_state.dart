@@ -8,9 +8,10 @@ import 'package:event/event.dart';
 import 'package:flow/bindings.dart';
 import 'package:flow/calculations.dart';
 
-import 'dart:developer' as dev;
+// import 'dart:developer' as dev;
 
 import 'package:flow/types.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// The [AppState] handles the game objects ([Player], [Target], [Enemy], [Block], [BouncingBlock], [Laser])
 /// and manages the game mechanics such as points, collisions and user interactions at each tick.
@@ -85,6 +86,95 @@ class AppState {
     onNewImage.broadcast();
 
     imageUpdateStatus = LengthyProcess.done;
+  }
+
+  // --------------------------------------- SAVED OBJECTS --------------------------------------- //
+  /// Used to store the user's [List] of [HighScore].
+  static SharedPreferences? _preferences;
+
+  /// The maximum number of [HighScore] that will be remembered.
+  static const _maxHighScores = 5;
+
+  /// The current [List] of [HighScore].
+  static List<HighScore> highScores = <HighScore>[];
+
+  /// Gets the [List] of [HighScore] from the [SharedPreferences].
+  ///
+  /// Also initializes the [SharedPreferences] instance if not done already.
+  static Future<void> getHighScores() async {
+    _preferences ??= await SharedPreferences.getInstance();
+
+    String? temporary = _preferences!.getString('highScores');
+    if (temporary != null) {
+      highScores.clear();
+      highScores.addAll(HighScore.decode(temporary));
+    }
+  }
+
+  /// Checks if the user's [points] or [time] are sufficient to be registered among the [HighScore].
+  ///
+  /// If the user has fulfilled the winning condition, [time] is used, otherwise [points] are used.
+  ///
+  /// If the user's score is registered as a [HighScore], update the [List] of [HighScore] and saved it into the [SharedPreferences].
+  static Future<void> _addHighScore(int points, int time) async {
+    if (_preferences == null) {
+      return;
+    }
+
+    if (highScores.isEmpty) {
+      highScores.add(
+        HighScore(
+          position: 1,
+          time: time,
+          dateMsSinceEpoch: DateTime.now().millisecondsSinceEpoch,
+          points: points,
+        ),
+      );
+    } else {
+      for (int scoreIndex = 0; scoreIndex < highScores.length; scoreIndex++) {
+        if (points >= winningCondition) {
+          if (time < highScores[scoreIndex].time) {
+            highScores.insert(
+              scoreIndex,
+              HighScore(
+                position: scoreIndex + 1,
+                time: time,
+                dateMsSinceEpoch: DateTime.now().millisecondsSinceEpoch,
+                points: points,
+              ),
+            );
+            break;
+          }
+        } else {
+          if (highScores[scoreIndex].points < winningCondition && points > highScores[scoreIndex].points) {
+            highScores.insert(
+              scoreIndex,
+              HighScore(
+                position: scoreIndex + 1,
+                time: time,
+                dateMsSinceEpoch: DateTime.now().millisecondsSinceEpoch,
+                points: points,
+              ),
+            );
+            break;
+          }
+        }
+      }
+      if (highScores.length > _maxHighScores) {
+        highScores.removeLast();
+      }
+    }
+
+    await _preferences!.setString('highScores', HighScore.encode(highScores));
+  }
+
+  /// Clear the list of [HighScore] include data saved in the [SharedPreferences].
+  static Future<void> resetHighScores() async {
+    if (_preferences == null) {
+      return;
+    }
+    highScores.clear();
+    await _preferences!.clear();
   }
 
   // --------------------------------------- GAME RELATED OBJECTS --------------------------------------- //
@@ -309,6 +399,9 @@ class AppState {
   ///
   /// calculating the [gameTime].
   static void _endGame() {
+    gameTime = DateTime.now().millisecondsSinceEpoch - gameTime;
+    _addHighScore(player.points, gameTime);
+
     player.death();
     for (int targetIndex = 0; targetIndex < targets.length; targetIndex++) {
       targets[targetIndex] = Target(ui.Offset.zero, 0, 0);
@@ -316,8 +409,6 @@ class AppState {
     enemies.clear();
     blocks.clear();
     lasers.clear();
-
-    gameTime = DateTime.now().millisecondsSinceEpoch - gameTime;
   }
 
   /// Returns true if the [player] has collided with the [object] and false otherwise.

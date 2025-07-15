@@ -2,9 +2,10 @@ import 'package:flow/app_state.dart';
 import 'package:flow/space.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   AppState.initialize();
+  await AppState.getHighScores();
   runApp(const HomePage());
 }
 

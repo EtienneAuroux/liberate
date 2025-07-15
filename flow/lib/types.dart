@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:math';
 import 'dart:ui';
@@ -41,6 +42,35 @@ class FrameEvent extends EventArgs {
   ///
   /// Requires three [int] for the [width], [height] and [dataSize] as well as a [Pointer] to the [data] array.
   FrameEvent(this.width, this.height, this.data, this.dataSize);
+}
+
+class HighScore {
+  final int position;
+  final int time;
+  final int dateMsSinceEpoch;
+  final int points;
+
+  HighScore({required this.position, required this.time, required this.dateMsSinceEpoch, required this.points});
+
+  factory HighScore.fromJson(Map<String, dynamic> jsonData) {
+    return HighScore(
+      position: jsonData['position'],
+      time: jsonData['time'],
+      dateMsSinceEpoch: jsonData['date'],
+      points: jsonData['points'],
+    );
+  }
+
+  static Map<String, dynamic> toMap(HighScore score) => {
+        'position': score.position,
+        'time': score.time,
+        'date': score.dateMsSinceEpoch,
+        'points': score.points,
+      };
+
+  static String encode(List<HighScore> scores) => json.encode(scores.map<Map<String, dynamic>>((HighScore score) => HighScore.toMap(score)).toList());
+
+  static List<HighScore> decode(String scores) => (json.decode(scores) as List<dynamic>).map<HighScore>((jsonItem) => HighScore.fromJson(jsonItem)).toList();
 }
 
 /// A class representing the [Player], i.e. the user.

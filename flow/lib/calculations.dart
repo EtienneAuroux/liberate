@@ -78,4 +78,14 @@ class Calculations {
 
     return '${'$hours'.padLeft(2, '0')}:${'$minutes'.padLeft(2, '0')}:${'$seconds'.padLeft(2, '0')}.$ms';
   }
+
+  static String convertEpochToDate(int millisecondsSinceEpoch) {
+    DateTime date = DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch);
+
+    String day = date.day.toString().padLeft(2, '0');
+    String month = date.month.toString().padLeft(2, '0');
+    String year = date.year.toString();
+
+    return '$day-$month-$year';
+  }
 }
